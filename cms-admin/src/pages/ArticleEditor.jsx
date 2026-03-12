@@ -234,10 +234,15 @@ export default function ArticleEditor() {
         history: true,
         heading: { levels: [1, 2, 3, 4, 5, 6] },
         codeBlock: false,
-        bulletList: false,
-        orderedList: false,
       }),
+      UnderlineExtension,
       HighlightExtension,
+      LinkExtension.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-[#E94560] underline decoration-[#E94560]/30 underline-offset-4'
+        }
+      }),
       TextStyle,
       Color,
       FontFamily,
