@@ -714,72 +714,74 @@ export default function ArticleEditor() {
             <button className="p-2 rounded hover:bg-gray-100 flex items-center gap-1 text-gray-600 transition-colors" title="Typography Settings">
               <Settings2 size={18} />
             </button>
-            <div className="hidden group-hover:block absolute top-full left-0 mt-2 bg-white p-5 border border-gray-100 rounded-xl shadow-2xl z-50 w-[260px]">
-              <div className="space-y-5">
-                {/* Line Spacing */}
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Line Spacing</label>
-                  <select 
-                    className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
-                    onChange={e => editor.chain().focus().setLineHeight(e.target.value).run()}
-                    value={editor.getAttributes('paragraph').lineHeight || ''}
-                  >
-                    <option value="">Default</option>
-                    {['1.0', '1.2', '1.4', '1.5', '1.6', '1.8', '2.0', '2.5', '3.0'].map(val => <option key={val} value={val}>{val}</option>)}
-                  </select>
-                </div>
-
-                {/* Letter Spacing */}
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Letter Spacing</label>
-                  <select 
-                    className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
-                    onChange={e => editor.chain().focus().setLetterSpacing(e.target.value).run()}
-                    value={editor.getAttributes('paragraph').letterSpacing || ''}
-                  >
-                    <option value="">Default</option>
-                    {['-0.05em', '-0.02em', '0.02em', '0.05em', '0.1em', '0.15em', '0.2em'].map(val => <option key={val} value={val}>{val}</option>)}
-                  </select>
-                </div>
-
-                {/* Paragraph Spacing */}
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Paragraph Spacing (Bottom)</label>
-                  <select 
-                    className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
-                    onChange={e => editor.chain().focus().setParagraphSpacing(e.target.value).run()}
-                    value={editor.getAttributes('paragraph').paragraphSpacing || ''}
-                  >
-                    <option value="">Default</option>
-                    {['0px', '8px', '16px', '24px', '32px', '40px', '48px'].map(val => <option key={val} value={val}>{val}</option>)}
-                  </select>
-                </div>
-
-                {/* Indentation */}
-                <div>
-                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Text Indent</label>
-                  <select 
-                    className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
-                    onChange={e => editor.chain().focus().setTextIndent(e.target.value).run()}
-                    value={editor.getAttributes('paragraph').textIndent || ''}
-                  >
-                    <option value="">None</option>
-                    {['12px', '24px', '36px', '48px', '60px'].map(val => <option key={val} value={val}>{val}</option>)}
-                  </select>
-                </div>
-
-                {/* Drop Cap */}
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-gray-700">Drop Cap</span>
-                    <span className="text-[9px] text-gray-400 uppercase">First letter highlight</span>
+            <div className="hidden group-hover:block absolute top-full left-0 pt-2 z-50">
+              <div className="bg-white p-5 border border-gray-100 rounded-xl shadow-2xl w-[260px]">
+                <div className="space-y-5">
+                  {/* Line Spacing */}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Line Spacing</label>
+                    <select 
+                      className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
+                      onChange={e => editor.chain().focus().setLineHeight(e.target.value).run()}
+                      value={editor.getAttributes('paragraph').lineHeight || ''}
+                    >
+                      <option value="">Default</option>
+                      {['1.0', '1.2', '1.4', '1.5', '1.6', '1.8', '2.0', '2.5', '3.0'].map(val => <option key={val} value={val}>{val}</option>)}
+                    </select>
                   </div>
-                  <button 
-                    onClick={() => editor.chain().focus().toggleDropCap().run()}
-                    className={`p-2 rounded-lg transition-all ${editor.isActive('paragraph', { dropCap: true }) ? 'bg-[#E94560] text-white shadow-lg shadow-[#E94560]/20' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
-                  >
-                    <div className="text-sm font-black">A</div>
-                  </button>
+
+                  {/* Letter Spacing */}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Letter Spacing</label>
+                    <select 
+                      className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
+                      onChange={e => editor.chain().focus().setLetterSpacing(e.target.value).run()}
+                      value={editor.getAttributes('paragraph').letterSpacing || ''}
+                    >
+                      <option value="">Default</option>
+                      {['-0.05em', '-0.02em', '0.02em', '0.05em', '0.1em', '0.15em', '0.2em'].map(val => <option key={val} value={val}>{val}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Paragraph Spacing */}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Paragraph Spacing (Bottom)</label>
+                    <select 
+                      className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
+                      onChange={e => editor.chain().focus().setParagraphSpacing(e.target.value).run()}
+                      value={editor.getAttributes('paragraph').paragraphSpacing || ''}
+                    >
+                      <option value="">Default</option>
+                      {['0px', '8px', '16px', '24px', '32px', '40px', '48px'].map(val => <option key={val} value={val}>{val}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Indentation */}
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Text Indent</label>
+                    <select 
+                      className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
+                      onChange={e => editor.chain().focus().setTextIndent(e.target.value).run()}
+                      value={editor.getAttributes('paragraph').textIndent || ''}
+                    >
+                      <option value="">None</option>
+                      {['12px', '24px', '36px', '48px', '60px'].map(val => <option key={val} value={val}>{val}</option>)}
+                    </select>
+                  </div>
+
+                  {/* Drop Cap */}
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-gray-700">Drop Cap</span>
+                      <span className="text-[9px] text-gray-400 uppercase">First letter highlight</span>
+                    </div>
+                    <button 
+                      onClick={() => editor.chain().focus().toggleDropCap().run()}
+                      className={`p-2 rounded-lg transition-all ${editor.isActive('paragraph', { dropCap: true }) ? 'bg-[#E94560] text-white shadow-lg shadow-[#E94560]/20' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                    >
+                      <div className="text-sm font-black">A</div>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -795,47 +797,49 @@ export default function ArticleEditor() {
                 <Type size={18} style={{ color: editor.getAttributes('textStyle').color || 'inherit' }} />
                 <div className="w-4 h-4 rounded-sm border" style={{ backgroundColor: editor.getAttributes('textStyle').color || '#000' }}></div>
               </button>
-              <div className="hidden group-hover:flex flex-col absolute top-full left-0 mt-2 bg-white p-4 border border-gray-100 rounded-xl shadow-2xl z-50 w-[300px]">
-                <button 
-                  onClick={() => editor.chain().focus().unsetColor().run()}
-                  className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-gray-50 rounded-lg text-sm font-semibold text-gray-700 mb-3 transition-colors"
-                >
-                  <Eraser size={14} className="text-gray-400" /> Reset Color
-                </button>
-                
-                <div className="grid grid-cols-10 gap-1 mb-4">
-                  {COLOR_PALETTE.flat().map(c => (
-                    <button 
-                      key={c} 
-                      onClick={() => editor.chain().focus().setColor(c).run()} 
-                      className={`w-5.5 h-5.5 rounded-full border border-gray-100 hover:scale-125 transition-all ${editor.isActive('textStyle', { color: c }) ? 'ring-2 ring-offset-1 ring-[#E94560]' : ''}`} 
-                      style={{ backgroundColor: c }}
-                      title={c}
-                    ></button>
-                  ))}
-                </div>
-
-                <div className="border-t border-gray-50 pt-3">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Standard</p>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {STANDARD_COLORS.map(c => (
+              <div className="hidden group-hover:flex flex-col absolute top-full left-0 pt-2 z-50">
+                <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-2xl w-[300px]">
+                  <button 
+                    onClick={() => editor.chain().focus().unsetColor().run()}
+                    className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-gray-50 rounded-lg text-sm font-semibold text-gray-700 mb-3 transition-colors"
+                  >
+                    <Eraser size={14} className="text-gray-400" /> Reset Color
+                  </button>
+                  
+                  <div className="grid grid-cols-10 gap-1 mb-4">
+                    {COLOR_PALETTE.flat().map(c => (
                       <button 
                         key={c} 
                         onClick={() => editor.chain().focus().setColor(c).run()} 
-                        className="w-7 h-7 rounded-full border border-gray-100 hover:scale-110 shadow-sm" 
+                        className={`w-5.5 h-5.5 rounded-full border border-gray-100 hover:scale-125 transition-all ${editor.isActive('textStyle', { color: c }) ? 'ring-2 ring-offset-1 ring-[#E94560]' : ''}`} 
                         style={{ backgroundColor: c }}
+                        title={c}
                       ></button>
                     ))}
                   </div>
-                </div>
 
-                <div className="border-t border-gray-50 pt-3 flex items-center justify-between">
-                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Custom</p>
-                   <input 
-                     type="color" 
-                     className="w-8 h-8 rounded p-0 border-none cursor-pointer overflow-hidden bg-transparent"
-                     onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
-                   />
+                  <div className="border-t border-gray-50 pt-3">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Standard</p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {STANDARD_COLORS.map(c => (
+                        <button 
+                          key={c} 
+                          onClick={() => editor.chain().focus().setColor(c).run()} 
+                          className="w-7 h-7 rounded-full border border-gray-100 hover:scale-110 shadow-sm" 
+                          style={{ backgroundColor: c }}
+                        ></button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-50 pt-3 flex items-center justify-between">
+                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Custom</p>
+                     <input 
+                       type="color" 
+                       className="w-8 h-8 rounded p-0 border-none cursor-pointer overflow-hidden bg-transparent"
+                       onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+                     />
+                  </div>
                 </div>
               </div>
             </div>
@@ -846,47 +850,49 @@ export default function ArticleEditor() {
                 <Highlighter size={18} />
                 <div className="w-4 h-4 rounded-sm border" style={{ backgroundColor: editor.getAttributes('highlight').color || 'transparent' }}></div>
               </button>
-              <div className="hidden group-hover:flex flex-col absolute top-full left-0 mt-2 bg-white p-4 border border-gray-100 rounded-xl shadow-2xl z-50 w-[300px]">
-                <button 
-                  onClick={() => editor.chain().focus().unsetHighlight().run()}
-                  className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-gray-50 rounded-lg text-sm font-semibold text-gray-700 mb-3 transition-colors"
-                >
-                  <Eraser size={14} className="text-gray-400" /> Clear Highlight
-                </button>
-                
-                <div className="grid grid-cols-10 gap-1 mb-4">
-                  {COLOR_PALETTE.flat().map(c => (
-                    <button 
-                      key={c} 
-                      onClick={() => editor.chain().focus().toggleHighlight({ color: c }).run()} 
-                      className={`w-5.5 h-5.5 rounded-full border border-gray-100 hover:scale-125 transition-all ${editor.isActive('highlight', { color: c }) ? 'ring-2 ring-offset-1 ring-[#E94560]' : ''}`} 
-                      style={{ backgroundColor: c }}
-                      title={c}
-                    ></button>
-                  ))}
-                </div>
-
-                <div className="border-t border-gray-50 pt-3">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Standard</p>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {STANDARD_COLORS.map(c => (
+              <div className="hidden group-hover:flex flex-col absolute top-full left-0 pt-2 z-50">
+                <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-2xl w-[300px]">
+                  <button 
+                    onClick={() => editor.chain().focus().unsetHighlight().run()}
+                    className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-gray-50 rounded-lg text-sm font-semibold text-gray-700 mb-3 transition-colors"
+                  >
+                    <Eraser size={14} className="text-gray-400" /> Clear Highlight
+                  </button>
+                  
+                  <div className="grid grid-cols-10 gap-1 mb-4">
+                    {COLOR_PALETTE.flat().map(c => (
                       <button 
                         key={c} 
                         onClick={() => editor.chain().focus().toggleHighlight({ color: c }).run()} 
-                        className="w-7 h-7 rounded-full border border-gray-100 hover:scale-110 shadow-sm" 
+                        className={`w-5.5 h-5.5 rounded-full border border-gray-100 hover:scale-125 transition-all ${editor.isActive('highlight', { color: c }) ? 'ring-2 ring-offset-1 ring-[#E94560]' : ''}`} 
                         style={{ backgroundColor: c }}
+                        title={c}
                       ></button>
                     ))}
                   </div>
-                </div>
 
-                <div className="border-t border-gray-50 pt-3 flex items-center justify-between">
-                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Custom</p>
-                   <input 
-                     type="color" 
-                     className="w-8 h-8 rounded p-0 border-none cursor-pointer overflow-hidden bg-transparent"
-                     onChange={(e) => editor.chain().focus().toggleHighlight({ color: e.target.value }).run()}
-                   />
+                  <div className="border-t border-gray-50 pt-3">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Standard</p>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {STANDARD_COLORS.map(c => (
+                        <button 
+                          key={c} 
+                          onClick={() => editor.chain().focus().toggleHighlight({ color: c }).run()} 
+                          className="w-7 h-7 rounded-full border border-gray-100 hover:scale-110 shadow-sm" 
+                          style={{ backgroundColor: c }}
+                        ></button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-50 pt-3 flex items-center justify-between">
+                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Custom</p>
+                     <input 
+                       type="color" 
+                       className="w-8 h-8 rounded p-0 border-none cursor-pointer overflow-hidden bg-transparent"
+                       onChange={(e) => editor.chain().focus().toggleHighlight({ color: e.target.value }).run()}
+                     />
+                  </div>
                 </div>
               </div>
             </div>
@@ -901,34 +907,36 @@ export default function ArticleEditor() {
             <button className="p-2 rounded-md hover:bg-gray-100 text-gray-600 transition-colors" title="Add Image">
               <ImageIcon size={18} />
             </button>
-            <div className="hidden group-hover:flex flex-col gap-2 absolute bottom-full left-0 mb-2 bg-white p-2 border border-gray-100 rounded-lg shadow-2xl z-50 w-40">
-              <button 
-                onClick={() => {
-                  const url = window.prompt('Enter Image URL')
-                  if (url) editor.chain().focus().insertContent({ type: 'customImage', attrs: { src: url } }).run()
-                }}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold hover:bg-gray-50 rounded text-gray-700"
-              >
-                <LinkIcon size={14} /> From URL
-              </button>
-              <label className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold hover:bg-gray-50 rounded cursor-pointer text-gray-700">
-                <UploadCloud size={14} /> Upload File
-                <input 
-                  type="file" 
-                  className="hidden" 
-                  accept="image/*"
-                  onChange={e => {
-                    const file = e.target.files?.[0]
-                    if (file) {
-                      const reader = new FileReader()
-                      reader.onload = (event) => {
-                        editor.chain().focus().insertContent({ type: 'customImage', attrs: { src: event.target.result } }).run()
-                      }
-                      reader.readAsDataURL(file)
-                    }
+            <div className="hidden group-hover:block absolute bottom-full left-0 pb-2 z-50">
+              <div className="flex flex-col gap-2 bg-white p-2 border border-gray-100 rounded-lg shadow-2xl w-40">
+                <button 
+                  onClick={() => {
+                    const url = window.prompt('Enter Image URL')
+                    if (url) editor.chain().focus().insertContent({ type: 'customImage', attrs: { src: url } }).run()
                   }}
-                />
-              </label>
+                  className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold hover:bg-gray-50 rounded text-gray-700"
+                >
+                  <LinkIcon size={14} /> From URL
+                </button>
+                <label className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold hover:bg-gray-50 rounded cursor-pointer text-gray-700">
+                  <UploadCloud size={14} /> Upload File
+                  <input 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) {
+                        const reader = new FileReader()
+                        reader.onload = (event) => {
+                          editor.chain().focus().insertContent({ type: 'customImage', attrs: { src: event.target.result } }).run()
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }}
+                  />
+                </label>
+              </div>
             </div>
           </div>
           <button 
