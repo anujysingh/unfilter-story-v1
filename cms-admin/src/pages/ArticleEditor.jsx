@@ -16,8 +16,6 @@ const COLOR_PALETTE = [
 ]
 
 const STANDARD_COLORS = ['#000000', '#FFFFFF', '#4A86E8', '#EA4335', '#FBBC04', '#34A853', '#FF6D01', '#46BDC6']
-const AVAILABLE_CATEGORIES = ['Tech', 'Lifestyle', 'Business', 'Finance', 'Entertainment', 'Health', 'Sports', 'Education', 'Politics', 'Science']
-const AVAILABLE_TAGS = ['AI', 'Startups', 'Coding', 'productivity', 'Design', 'WebDev', 'Investment', 'Stock Market', 'Future', 'Innovation']
 
 import { useParams } from 'react-router-dom'
 import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper, ReactRenderer } from '@tiptap/react'
@@ -326,7 +324,10 @@ export default function ArticleEditor() {
   const [category, setCategory] = useState('')
   const [tags, setTags] = useState([])
   const [tagInput, setTagInput] = useState('')
+  const [availableCategories, setAvailableCategories] = useState([])
+  const [availableTags, setAvailableTags] = useState([])
   const autoSaveTimerRef = useRef(null)
+
 
 
   const editor = useEditor({
@@ -415,6 +416,21 @@ export default function ArticleEditor() {
   // Mode switch is now handled by parent divine class
   
   useEffect(() => {
+    // Fetch dynamic taxonomy
+    const fetchTaxonomy = async () => {
+      try {
+        const [catRes, tagRes] = await Promise.all([
+          fetch('http://localhost:3000/cms/v1/categories'),
+          fetch('http://localhost:3000/cms/v1/tags')
+        ])
+        setAvailableCategories(await catRes.json() || [])
+        setAvailableTags(await tagRes.json() || [])
+      } catch (e) {
+        console.error("Failed to fetch taxonomy", e)
+      }
+    }
+    fetchTaxonomy()
+
     if (id && editor) {
       fetch(`http://localhost:3000/cms/v1/articles/${id}`)
         .then(res => res.json())
@@ -525,7 +541,7 @@ export default function ArticleEditor() {
     return () => {
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
     }
-  }, [updateCounter, headline, editor, status])
+  }, [updateCounter, headline, editor, status, category, tags])
 
   // Block Drag Handle positioning logic
   useEffect(() => {
@@ -634,51 +650,61 @@ export default function ArticleEditor() {
         </div>
       </div>
 
-      {/* Article Title Block */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 mb-6">
          <input 
-            className="text-4xl font-extrabold w-full outline-none placeholder-gray-100 text-gray-900 border-none focus:ring-0 mb-6"
+            className="text-4xl font-extrabold w-full outline-none placeholder-gray-100 text-gray-900 border-none focus:ring-0 mb-8"
             placeholder="Enter Article Headline..."
             value={headline}
             onChange={e => setHeadline(e.target.value)}
           />
           
-          <div className="flex flex-wrap gap-8 pt-6 border-t border-gray-50">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6 pt-8 border-t border-gray-50">
             {/* Category Selection */}
-            <div className="flex-1 min-w-[200px]">
-              <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
-                <Layout size={12} className="text-[#E94560]" /> Category
+            <div className="group/meta">
+              <label className="flex items-center gap-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4 group-hover/meta:text-[#E94560] transition-colors">
+                <div className="w-5 h-5 rounded-md bg-gray-50 flex items-center justify-center group-hover/meta:bg-[#E94560]/10 transition-colors">
+                   <Layout size={12} className="text-gray-400 group-hover/meta:text-[#E94560]" />
+                </div>
+                Article Category
               </label>
-              <select 
-                value={category}
-                onChange={e => setCategory(e.target.value)}
-                className="w-full bg-gray-50/50 border border-gray-100 rounded-lg px-3 py-2 text-sm font-semibold text-gray-700 outline-none focus:border-[#E94560] transition-colors appearance-none cursor-pointer"
-              >
-                <option value="">Select Category</option>
-                {AVAILABLE_CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <select 
+                  value={category}
+                  onChange={e => setCategory(e.target.value)}
+                  className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-700 outline-none focus:border-[#E94560] focus:bg-white transition-all appearance-none cursor-pointer hover:border-gray-300"
+                >
+                  <option value="">Choose a category...</option>
+                  {availableCategories.map(cat => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                  <ArrowLeft size={14} className="-rotate-90" />
+                </div>
+              </div>
             </div>
 
             {/* Tags Selection */}
-            <div className="flex-[2] min-w-[300px]">
-              <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
-                <Tag size={12} className="text-[#E94560]" /> Tags
+            <div className="group/meta">
+              <label className="flex items-center gap-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4 group-hover/meta:text-[#E94560] transition-colors">
+                <div className="w-5 h-5 rounded-md bg-gray-50 flex items-center justify-center group-hover/meta:bg-[#E94560]/10 transition-colors">
+                   <Tag size={12} className="text-gray-400 group-hover/meta:text-[#E94560]" />
+                </div>
+                Searchable Tags
               </label>
-              <div className="flex flex-wrap gap-2 p-2 bg-gray-50/50 border border-gray-100 rounded-lg min-h-[42px]">
+              <div className="flex flex-wrap gap-2 p-1.5 bg-gray-50/50 border border-gray-200 rounded-xl min-h-[46px] group-hover/meta:border-gray-300 focus-within:!border-[#E94560] focus-within:!bg-white transition-all">
                 {tags.map(tag => (
-                  <span key={tag} className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-100 rounded-md text-xs font-bold text-[#E94560] shadow-sm group">
+                  <span key={tag} className="flex items-center gap-1.5 pl-3 pr-2 py-1.5 bg-white border border-[#E94560]/20 rounded-lg text-xs font-bold text-[#E94560] shadow-sm animate-in fade-in zoom-in duration-200">
                     {tag}
-                    <button onClick={() => setTags(tags.filter(t => t !== tag))} className="text-gray-400 hover:text-red-500">
-                      <X size={10} />
+                    <button onClick={() => setTags(tags.filter(t => t !== tag))} className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-[#E94560] hover:text-white transition-colors">
+                      <X size={12} />
                     </button>
                   </span>
                 ))}
                 <input 
                   type="text"
-                  placeholder="Type and enter..."
-                  className="flex-1 bg-transparent border-none outline-none text-sm min-w-[120px] font-medium"
+                  placeholder={tags.length === 0 ? "Type tag name..." : ""}
+                  className="flex-1 bg-transparent border-none outline-none text-sm px-3 font-semibold text-gray-800 placeholder-gray-400 min-w-[100px]"
                   value={tagInput}
                   onChange={e => setTagInput(e.target.value)}
                   onKeyDown={e => {
@@ -692,16 +718,20 @@ export default function ArticleEditor() {
                   }}
                 />
               </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {AVAILABLE_TAGS.filter(t => !tags.includes(t)).slice(0, 5).map(tag => (
-                  <button 
-                    key={tag}
-                    onClick={() => setTags([...tags, tag])}
-                    className="text-[10px] font-bold text-gray-400 hover:text-[#E94560] hover:bg-white px-2 py-0.5 rounded transition-all border border-transparent hover:border-gray-100"
-                  >
-                    + {tag}
-                  </button>
-                ))}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {availableTags
+                  .filter(t => !tags.includes(t.name))
+                  .slice(0, 8)
+                  .map(tag => (
+                    <button 
+                      key={tag.id}
+                      onClick={() => setTags([...tags, tag.name])}
+                      className="text-[10px] font-extrabold text-gray-500 bg-gray-100/50 hover:bg-[#E94560]/10 hover:text-[#E94560] px-3 py-1 rounded-full transition-all border border-transparent hover:border-[#E94560]/20"
+                    >
+                      + {tag.name}
+                    </button>
+                  ))
+                }
               </div>
             </div>
           </div>
