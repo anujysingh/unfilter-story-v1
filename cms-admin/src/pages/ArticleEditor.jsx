@@ -4,6 +4,7 @@ import {
   Save, ExternalLink, ArrowLeft, Bold, Italic, Strikethrough, Underline, Highlighter, 
   Link as LinkIcon, Unlink, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6,
   Code, Copy, CheckCircle2, AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  Table as TableIcon, CheckSquare, Minus, Image as ImageIcon, UploadCloud, Link2, Settings2, Trash2, Video, RefreshCw,
   Type, Check, X, Languages, Eye, Send, GripVertical, AlertCircle, Layout
 } from 'lucide-react'
 import { useParams } from 'react-router-dom'
@@ -330,6 +331,18 @@ export default function ArticleEditor() {
       setLocalSize(currentSize)
     }
   })
+
+  useEffect(() => {
+    if (editor) {
+      editor.setOptions({
+        editorProps: {
+          attributes: {
+            class: editorMode === 'block' ? 'tiptap is-block-editor' : 'tiptap',
+          },
+        },
+      })
+    }
+  }, [editorMode, editor])
 
   useEffect(() => {
     if (id && editor) {
