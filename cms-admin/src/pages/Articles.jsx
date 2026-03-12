@@ -28,10 +28,8 @@ export default function Articles() {
   const [tagFilter, setTagFilter] = useState('all')
   const [datePickerId, setDatePickerId] = useState(null)
   const [newPublishDate, setNewPublishDate] = useState('')
-
-  // Derive unique categories and tags from articles
-  const availableCategories = ['all', ...new Set(articles.map(a => a.category).filter(Boolean))]
-  const availableTags = ['all', ...new Set(articles.flatMap(a => a.tags || []).filter(Boolean))]
+  const [allCategories, setAllCategories] = useState([])
+  const [allTags, setAllTags] = useState([])
 
   const fetchArticles = () => {
     fetch('http://localhost:3000/cms/v1/articles')
@@ -46,9 +44,25 @@ export default function Articles() {
       })
   }
 
+  const fetchCategoriesAndTags = () => {
+    fetch('http://localhost:3000/cms/v1/categories')
+      .then(res => res.json())
+      .then(data => setAllCategories(data || []))
+      .catch(err => console.error('Failed to fetch categories', err))
+
+    fetch('http://localhost:3000/cms/v1/tags')
+      .then(res => res.json())
+      .then(data => setAllTags(data || []))
+      .catch(err => console.error('Failed to fetch tags', err))
+  }
+
   useEffect(() => {
     fetchArticles();
-    const interval = setInterval(fetchArticles, 30000); // refresh every 30s
+    fetchCategoriesAndTags();
+    const interval = setInterval(() => {
+      fetchArticles();
+      fetchCategoriesAndTags();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -249,8 +263,8 @@ export default function Articles() {
                className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer min-w-[100px] capitalize"
             >
                <option value="all">All Category</option>
-               {availableCategories.filter(c => c !== 'all').map(cat => (
-                 <option key={cat} value={cat}>{cat}</option>
+               {allCategories.map(cat => (
+                 <option key={cat.id} value={cat.name}>{cat.name}</option>
                ))}
             </select>
           </div>
@@ -264,8 +278,8 @@ export default function Articles() {
                className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer min-w-[100px] capitalize"
             >
                <option value="all">All Tags</option>
-               {availableTags.filter(t => t !== 'all').map(tag => (
-                 <option key={tag} value={tag}>{tag}</option>
+               {allTags.map(tag => (
+                 <option key={tag.id} value={tag.name}>{tag.name}</option>
                ))}
             </select>
           </div>
