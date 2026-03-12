@@ -195,22 +195,91 @@ const Callout = Node.create({
 
 const ImageComponent = ({ node, updateAttributes, deleteNode }) => {
   const { src, align, width, caption } = node.attrs
+  const [isResizing, setIsResizing] = useState(false)
+  const containerRef = useRef(null)
+
+  const handleResize = useCallback((e) => {
+    e.preventDefault()
+    setIsResizing(true)
+
+    const startX = e.clientX
+    const startWidth = containerRef.current.offsetWidth
+
+    const onMouseMove = (moveEvent) => {
+      // If centered, resizing happens on both sides, so we double the delta
+      const delta = (moveEvent.clientX - startX) * (align === 'center' ? 2 : 1)
+      const newWidth = Math.max(100, Math.min(containerRef.current.parentElement.offsetWidth, startWidth + delta))
+      updateAttributes({ width: `${newWidth}px` })
+    }
+
+    const onMouseUp = () => {
+      setIsResizing(false)
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [align, updateAttributes])
+
   return (
-    <NodeViewWrapper className={`flex my-4 w-full ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'}`}>
-      <div className="relative group" style={{ width }}>
-        <img src={src} className="rounded max-w-full h-auto" />
+    <NodeViewWrapper className={`flex my-10 w-full transition-all ${align === 'center' ? 'justify-center' : align === 'right' ? 'justify-end' : 'justify-start'}`}>
+      <div 
+        ref={containerRef}
+        className={`relative group transition-all duration-300 ${isResizing ? 'ring-2 ring-[#E94560] ring-offset-4' : ''}`}
+        style={{ width, maxWidth: '100%' }}
+      >
+        <div className="relative overflow-hidden rounded-2xl shadow-lg border border-gray-100 group-hover:shadow-2xl transition-all duration-500">
+          <img src={src} className="w-full h-auto block select-none" draggable="false" />
+          
+          {/* Resize Handle */}
+          <div 
+            onMouseDown={handleResize}
+            className="absolute bottom-4 right-4 w-4 h-4 bg-white border-2 border-[#E94560] rounded-full cursor-nwse-resize shadow-lg z-20 opacity-0 group-hover:opacity-100 transition-opacity scale-0 group-hover:scale-100 transform duration-300"
+          >
+            <div className="absolute inset-0 bg-[#E94560] animate-ping rounded-full opacity-20 pointer-events-none"></div>
+          </div>
+
+          {/* Alignment & Action Controls */}
+          <div className="absolute top-4 right-4 flex items-center gap-1.5 p-1.5 bg-white/90 backdrop-blur-md rounded-xl shadow-2xl translate-y-[-10px] opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 border border-gray-100 z-30">
+            <button 
+              onClick={() => updateAttributes({ align: 'left' })} 
+              className={`p-1.5 rounded-lg transition-all ${align === 'left' ? 'bg-[#E94560] text-white shadow-lg shadow-[#E94560]/20' : 'text-gray-400 hover:bg-gray-100'}`}
+              title="Align Left"
+            >
+              <AlignLeft size={16}/>
+            </button>
+            <button 
+              onClick={() => updateAttributes({ align: 'center' })} 
+              className={`p-1.5 rounded-lg transition-all ${align === 'center' ? 'bg-[#E94560] text-white shadow-lg shadow-[#E94560]/20' : 'text-gray-400 hover:bg-gray-100'}`}
+              title="Align Center"
+            >
+              <AlignCenter size={16}/>
+            </button>
+            <button 
+              onClick={() => updateAttributes({ align: 'right' })} 
+              className={`p-1.5 rounded-lg transition-all ${align === 'right' ? 'bg-[#E94560] text-white shadow-lg shadow-[#E94560]/20' : 'text-gray-400 hover:bg-gray-100'}`}
+              title="Align Right"
+            >
+              <AlignRight size={16}/>
+            </button>
+            <div className="w-px h-4 bg-gray-200 mx-1"></div>
+            <button 
+              onClick={deleteNode} 
+              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+              title="Delete Image"
+            >
+              <Trash2 size={16}/>
+            </button>
+          </div>
+        </div>
+
         <input 
-          className="w-full text-center text-sm text-gray-500 mt-2 outline-none" 
+          className="w-full text-center text-xs font-black text-gray-300 mt-4 outline-none border-none bg-transparent hover:text-gray-500 focus:text-[#E94560] transition-colors tracking-widest uppercase" 
           value={caption || ''} 
-          placeholder="Caption..." 
+          placeholder="ENTER CAPTION..." 
           onChange={e => updateAttributes({ caption: e.target.value })}
         />
-        <div className="absolute top-2 right-2 hidden group-hover:flex gap-1">
-          <button onClick={() => updateAttributes({ align: 'left' })} className="p-1 bg-white rounded shadow"><AlignLeft size={14}/></button>
-          <button onClick={() => updateAttributes({ align: 'center' })} className="p-1 bg-white rounded shadow"><AlignCenter size={14}/></button>
-          <button onClick={() => updateAttributes({ align: 'right' })} className="p-1 bg-white rounded shadow"><AlignRight size={14}/></button>
-          <button onClick={deleteNode} className="p-1 bg-red-500 text-white rounded shadow"><Trash2 size={14}/></button>
-        </div>
       </div>
     </NodeViewWrapper>
   )
