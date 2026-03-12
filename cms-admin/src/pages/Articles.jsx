@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Filter, MoreHorizontal, CheckCircle2, Clock, Calendar, ArrowRight, History, X } from 'lucide-react'
+import { Plus, Search, Filter, MoreHorizontal, CheckCircle2, Clock, Calendar, ArrowRight, History, X, Tag as TagIcon, LayoutGrid } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const getStatusBadge = (status) => {
@@ -24,8 +24,14 @@ export default function Articles() {
   const [endDate, setEndDate] = useState('')
   const [quickRange, setQuickRange] = useState('custom')
   const [openDropdownId, setOpenDropdownId] = useState(null)
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [tagFilter, setTagFilter] = useState('all')
   const [datePickerId, setDatePickerId] = useState(null)
   const [newPublishDate, setNewPublishDate] = useState('')
+
+  // Derive unique categories and tags from articles
+  const availableCategories = ['all', ...new Set(articles.map(a => a.category).filter(Boolean))]
+  const availableTags = ['all', ...new Set(articles.flatMap(a => a.tags || []).filter(Boolean))]
 
   const fetchArticles = () => {
     fetch('http://localhost:3000/cms/v1/articles')
@@ -129,8 +135,11 @@ export default function Articles() {
     } else if (endDate) {
       matchesDate = articleDate <= endDate
     }
+
+    const matchesCategory = categoryFilter === 'all' || a.category === categoryFilter
+    const matchesTag = tagFilter === 'all' || (a.tags && a.tags.includes(tagFilter))
     
-    return matchesSearch && matchesFilter && matchesDate
+    return matchesSearch && matchesFilter && matchesDate && matchesCategory && matchesTag
   })
 
   // Close dropdown if clicked outside
@@ -219,13 +228,43 @@ export default function Articles() {
             <select 
                value={filter} 
                onChange={(e) => setFilter(e.target.value)} 
-               className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer"
+               className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer min-w-[100px]"
             >
-               <option value="all">All Status</option>
+               <option value="all">Status</option>
                <option value="published">Published</option>
                <option value="scheduled">Scheduled</option>
                <option value="draft">Draft</option>
                <option value="unpublished">Unpublished</option>
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-md px-3 py-1">
+            <LayoutGrid className="w-4 h-4 mr-2 text-gray-400" />
+            <select 
+               value={categoryFilter} 
+               onChange={(e) => setCategoryFilter(e.target.value)} 
+               className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer min-w-[100px] capitalize"
+            >
+               <option value="all">Category</option>
+               {availableCategories.filter(c => c !== 'all').map(cat => (
+                 <option key={cat} value={cat}>{cat}</option>
+               ))}
+            </select>
+          </div>
+
+          {/* Tag Filter */}
+          <div className="relative flex items-center bg-gray-50 border border-gray-200 rounded-md px-3 py-1">
+            <TagIcon className="w-4 h-4 mr-2 text-gray-400" />
+            <select 
+               value={tagFilter} 
+               onChange={(e) => setTagFilter(e.target.value)} 
+               className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer min-w-[100px] capitalize"
+            >
+               <option value="all">Tag</option>
+               {availableTags.filter(t => t !== 'all').map(tag => (
+                 <option key={tag} value={tag}>{tag}</option>
+               ))}
             </select>
           </div>
         </div>
