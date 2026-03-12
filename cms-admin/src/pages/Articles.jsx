@@ -409,23 +409,28 @@ export default function Articles() {
                     {/* Action Dropdown */}
                     {openDropdownId === article.id && (
                        <div className="absolute right-8 top-12 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden text-left" onClick={(e) => e.stopPropagation()}>
-                          {article.status === 'published' ? (
-                             <button 
-                                onClick={() => handleUnpublish(article.id)}
-                                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                             >
-                                Unpublish
-                             </button>
-                          ) : (
-                             <>
-                                <Link 
-                                   to={`/articles/${article.id}`}
-                                   className="w-full block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                                >
-                                   Edit Article
-                                </Link>
+                                 {/* Edit Article is available for all non-published articles */}
+                                 {article.status !== 'published' && (
+                                   <Link 
+                                      to={`/articles/${article.id}`}
+                                      className="w-full block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                                   >
+                                      Edit Article
+                                   </Link>
+                                 )}
 
-                                {article.status === 'scheduled' && (
+                                 {/* Published Status Actions */}
+                                 {article.status === 'published' && (
+                                   <button 
+                                      onClick={() => handleUnpublish(article.id)}
+                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                                   >
+                                      Unpublish
+                                   </button>
+                                 )}
+
+                                 {/* Scheduled Status Actions */}
+                                 {article.status === 'scheduled' && (
                                    <>
                                       <button 
                                          onClick={() => handlePublishNow(article.id, 'Publish')}
@@ -444,30 +449,30 @@ export default function Articles() {
                                       </button>
                                        <button 
                                           onClick={() => handleCancelSchedule(article.id)}
-                                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer"
+                                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer font-medium border-t border-gray-100 mt-1 pt-2"
                                        >
                                           Cancel Scheduling
                                        </button>
                                    </>
-                                )}
+                                 )}
 
-                                {article.status === 'unpublished' && (
-                                      <button 
-                                         onClick={() => handlePublishNow(article.id, 'Republish')}
-                                         className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 cursor-pointer font-medium"
-                                      >
-                                         Republish
-                                      </button>
-                                )}
+                                 {/* Unpublished Status Actions */}
+                                 {article.status === 'unpublished' && (
+                                   <button 
+                                      onClick={() => handlePublishNow(article.id, 'Republish')}
+                                      className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 cursor-pointer font-medium"
+                                   >
+                                      Republish Now
+                                   </button>
+                                 )}
 
-                                <button 
-                                   onClick={() => window.open(`http://localhost:4321/article/${article.slug}`, '_blank')}
-                                   className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                                >
-                                   Preview / View
-                                </button>
-                             </>
-                          )}
+                                 {/* Preview Option (Always visible) */}
+                                 <button 
+                                    onClick={() => window.open(`http://localhost:4321/article/${article.slug}`, '_blank')}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer border-t border-gray-100 mt-1 pt-2"
+                                 >
+                                    Preview / View
+                                 </button>
                        </div>
                     )}
                   </td>
