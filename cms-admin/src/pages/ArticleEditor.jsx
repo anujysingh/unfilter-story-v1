@@ -104,6 +104,67 @@ const LineHeight = Extension.create({
   },
 })
 
+const TypographyAdvanced = Extension.create({
+  name: 'typographyAdvanced',
+  addOptions() {
+    return {
+      types: ['paragraph', 'heading'],
+    }
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          letterSpacing: {
+            default: null,
+            parseHTML: element => element.style.letterSpacing || null,
+            renderHTML: attributes => {
+              if (!attributes.letterSpacing) return {}
+              return { style: `letter-spacing: ${attributes.letterSpacing}` }
+            },
+          },
+          paragraphSpacing: {
+            default: null,
+            parseHTML: element => element.style.marginBottom || null,
+            renderHTML: attributes => {
+              if (!attributes.paragraphSpacing) return {}
+              return { style: `margin-bottom: ${attributes.paragraphSpacing}` }
+            },
+          },
+          textIndent: {
+            default: null,
+            parseHTML: element => element.style.textIndent || null,
+            renderHTML: attributes => {
+              if (!attributes.textIndent) return {}
+              return { style: `text-indent: ${attributes.textIndent}` }
+            },
+          },
+          dropCap: {
+            default: false,
+            parseHTML: element => element.classList.contains('drop-cap'),
+            renderHTML: attributes => {
+              if (!attributes.dropCap) return {}
+              return { class: 'drop-cap' }
+            },
+          },
+        },
+      },
+    ]
+  },
+  addCommands() {
+    return {
+      setLetterSpacing: letterSpacing => ({ commands }) => this.options.types.every(type => commands.updateAttributes(type, { letterSpacing })),
+      setParagraphSpacing: paragraphSpacing => ({ commands }) => this.options.types.every(type => commands.updateAttributes(type, { paragraphSpacing })),
+      setTextIndent: textIndent => ({ commands }) => this.options.types.every(type => commands.updateAttributes(type, { textIndent })),
+      toggleDropCap: () => ({ commands, editor }) => {
+        const isActive = editor.getAttributes('paragraph').dropCap
+        return commands.updateAttributes('paragraph', { dropCap: !isActive })
+      },
+    }
+  },
+})
+
 const FONT_CATEGORIES = {
   'Sans Serif': ["Roboto", "Open Sans", "Lato", "Montserrat", "Poppins", "Inter", "Nunito", "Raleway", "Work Sans", "Rubik", "Oxygen", "Ubuntu", "PT Sans", "Fira Sans", "Noto Sans", "DM Sans", "Assistant", "Manrope", "Mulish", "Outfit", "Quicksand", "Public Sans", "Karla", "Urbanist"],
   'Serif': ["Merriweather", "Playfair Display", "Libre Baskerville", "Lora", "PT Serif", "Crimson Text", "EB Garamond", "Spectral", "Domine", "Arvo", "Cardo", "Vollkorn", "Bitter", "Zilla Slab", "Noto Serif", "Source Serif 4"],
@@ -291,6 +352,8 @@ export default function ArticleEditor() {
       }),
       FontFamily,
       FontSize,
+      LineHeight,
+      TypographyAdvanced,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Placeholder.configure({ placeholder: 'Start writing...' }),
       CharacterCount,
@@ -645,6 +708,84 @@ export default function ArticleEditor() {
           <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('right').run()} isActive={editor.isActive({ textAlign: 'right' })} tooltip="Align Right"><AlignRight size={18}/></ToolbarButton>
           <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('justify').run()} isActive={editor.isActive({ textAlign: 'justify' })} tooltip="Justify"><AlignJustify size={18}/></ToolbarButton>
         </div>
+
+        <div className="flex items-center gap-1 px-2 border-r border-gray-200">
+          <div className="relative group">
+            <button className="p-2 rounded hover:bg-gray-100 flex items-center gap-1 text-gray-600 transition-colors" title="Typography Settings">
+              <Settings2 size={18} />
+            </button>
+            <div className="hidden group-hover:block absolute top-full left-0 mt-2 bg-white p-5 border border-gray-100 rounded-xl shadow-2xl z-50 w-[260px]">
+              <div className="space-y-5">
+                {/* Line Spacing */}
+                <div>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Line Spacing</label>
+                  <select 
+                    className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
+                    onChange={e => editor.chain().focus().setLineHeight(e.target.value).run()}
+                    value={editor.getAttributes('paragraph').lineHeight || ''}
+                  >
+                    <option value="">Default</option>
+                    {['1.0', '1.2', '1.4', '1.5', '1.6', '1.8', '2.0', '2.5', '3.0'].map(val => <option key={val} value={val}>{val}</option>)}
+                  </select>
+                </div>
+
+                {/* Letter Spacing */}
+                <div>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Letter Spacing</label>
+                  <select 
+                    className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
+                    onChange={e => editor.chain().focus().setLetterSpacing(e.target.value).run()}
+                    value={editor.getAttributes('paragraph').letterSpacing || ''}
+                  >
+                    <option value="">Default</option>
+                    {['-0.05em', '-0.02em', '0.02em', '0.05em', '0.1em', '0.15em', '0.2em'].map(val => <option key={val} value={val}>{val}</option>)}
+                  </select>
+                </div>
+
+                {/* Paragraph Spacing */}
+                <div>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Paragraph Spacing (Bottom)</label>
+                  <select 
+                    className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
+                    onChange={e => editor.chain().focus().setParagraphSpacing(e.target.value).run()}
+                    value={editor.getAttributes('paragraph').paragraphSpacing || ''}
+                  >
+                    <option value="">Default</option>
+                    {['0px', '8px', '16px', '24px', '32px', '40px', '48px'].map(val => <option key={val} value={val}>{val}</option>)}
+                  </select>
+                </div>
+
+                {/* Indentation */}
+                <div>
+                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Text Indent</label>
+                  <select 
+                    className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[#E94560] outline-none bg-gray-50/50"
+                    onChange={e => editor.chain().focus().setTextIndent(e.target.value).run()}
+                    value={editor.getAttributes('paragraph').textIndent || ''}
+                  >
+                    <option value="">None</option>
+                    {['12px', '24px', '36px', '48px', '60px'].map(val => <option key={val} value={val}>{val}</option>)}
+                  </select>
+                </div>
+
+                {/* Drop Cap */}
+                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-gray-700">Drop Cap</span>
+                    <span className="text-[9px] text-gray-400 uppercase">First letter highlight</span>
+                  </div>
+                  <button 
+                    onClick={() => editor.chain().focus().toggleDropCap().run()}
+                    className={`p-2 rounded-lg transition-all ${editor.isActive('paragraph', { dropCap: true }) ? 'bg-[#E94560] text-white shadow-lg shadow-[#E94560]/20' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                  >
+                    <div className="text-sm font-black">A</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
 
         <div className="flex items-center gap-2 px-2 border-r border-gray-200">
           <div className="flex items-center gap-1">
