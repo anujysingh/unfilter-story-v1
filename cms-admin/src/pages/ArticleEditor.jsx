@@ -5,8 +5,21 @@ import {
   Link as LinkIcon, Unlink, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6,
   Code, Copy, CheckCircle2, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Table as TableIcon, CheckSquare, Minus, Image as ImageIcon, UploadCloud, Link2, Settings2, Trash2, Video, RefreshCw,
-  Type, Check, X, Languages, Eye, Send, GripVertical, AlertCircle, Layout
+  Type, Check, X, Languages, Eye, Send, GripVertical, AlertCircle, Layout, Eraser
 } from 'lucide-react'
+
+const COLOR_PALETTE = [
+  ['#000000', '#434343', '#666666', '#999999', '#B7B7B7', '#CCCCCC', '#D9D9D9', '#EFEFEF', '#F3F3F3', '#FFFFFF'],
+  ['#980000', '#FF0000', '#FF9900', '#FFFF00', '#00FF00', '#00FFFF', '#4A86E8', '#0000FF', '#9900FF', '#FF00FF'],
+  ['#E6B8AF', '#F4CCCC', '#FCE5CD', '#FFF2CC', '#D9EAD3', '#D0E0E3', '#C9DAF8', '#CFE2F3', '#D9D2E9', '#EAD1DC'],
+  ['#DD7E6B', '#EA9999', '#F9CB9C', '#FFE599', '#B6D7A8', '#A2C4C9', '#A4C2F4', '#9FC5E8', '#B4A7D6', '#D5A6BD'],
+  ['#CC4125', '#E06666', '#F6B26B', '#FFD966', '#93C47D', '#76A5AF', '#6D9EEB', '#6FA8DC', '#8E7CC3', '#C27BA0'],
+  ['#A61C00', '#CC0000', '#E69138', '#F1C232', '#6AA84F', '#45818E', '#3C78D8', '#3D85C6', '#674EA7', '#A64D79'],
+  ['#85200C', '#990000', '#B45F06', '#BF9000', '#38761D', '#134F5C', '#1155CC', '#0B5394', '#351C75', '#741B47'],
+  ['#5B0F00', '#660000', '#783F04', '#7F6000', '#274E13', '#0C343D', '#1C4587', '#073763', '#20124D', '#4C1130']
+]
+
+const STANDARD_COLORS = ['#000000', '#FFFFFF', '#4A86E8', '#EA4335', '#FBBC04', '#34A853', '#FF6D01', '#46BDC6']
 import { useParams } from 'react-router-dom'
 import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper, ReactRenderer } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
@@ -635,38 +648,105 @@ export default function ArticleEditor() {
 
         <div className="flex items-center gap-2 px-2 border-r border-gray-200">
           <div className="flex items-center gap-1">
+            {/* Text Color Picker */}
             <div className="relative group">
               <button className="p-2 rounded hover:bg-gray-100 flex items-center gap-1" title="Text Color">
                 <Type size={18} style={{ color: editor.getAttributes('textStyle').color || 'inherit' }} />
                 <div className="w-4 h-4 rounded-sm border" style={{ backgroundColor: editor.getAttributes('textStyle').color || '#000' }}></div>
               </button>
-              <div className="hidden group-hover:grid grid-cols-5 gap-1.5 absolute top-full left-0 mt-2 bg-white p-3 border border-gray-100 rounded-xl shadow-2xl z-50 w-44">
-                {[
-                  '#000000', '#333333', '#666666', '#999999', '#CCCCCC', // Monochromes
-                  '#E94560', '#C41E3A', '#8B0000', '#FF4D4D', '#FF8080', // Reds/Pinks
-                  '#005FB8', '#0078D4', '#2B579A', '#326690', '#4F9BC1', // Blues
-                  '#198038', '#24A148', '#0E6027', '#6FD195', '#B1EAB1', // Greens
-                  '#8A3FFC', '#6929C4', '#491D8B', '#A56EFF', '#BE95FF'  // Purples
-                ].map(c => (
-                  <button key={c} onClick={() => editor.chain().focus().setColor(c).run()} className="w-6 h-6 rounded-md border border-gray-100 hover:scale-125 transition-transform" style={{ backgroundColor: c }}></button>
-                ))}
+              <div className="hidden group-hover:flex flex-col absolute top-full left-0 mt-2 bg-white p-4 border border-gray-100 rounded-xl shadow-2xl z-50 w-[300px]">
+                <button 
+                  onClick={() => editor.chain().focus().unsetColor().run()}
+                  className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-gray-50 rounded-lg text-sm font-semibold text-gray-700 mb-3 transition-colors"
+                >
+                  <Eraser size={14} className="text-gray-400" /> Reset Color
+                </button>
+                
+                <div className="grid grid-cols-10 gap-1 mb-4">
+                  {COLOR_PALETTE.flat().map(c => (
+                    <button 
+                      key={c} 
+                      onClick={() => editor.chain().focus().setColor(c).run()} 
+                      className={`w-5.5 h-5.5 rounded-full border border-gray-100 hover:scale-125 transition-all ${editor.isActive('textStyle', { color: c }) ? 'ring-2 ring-offset-1 ring-[#E94560]' : ''}`} 
+                      style={{ backgroundColor: c }}
+                      title={c}
+                    ></button>
+                  ))}
+                </div>
+
+                <div className="border-t border-gray-50 pt-3">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Standard</p>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {STANDARD_COLORS.map(c => (
+                      <button 
+                        key={c} 
+                        onClick={() => editor.chain().focus().setColor(c).run()} 
+                        className="w-7 h-7 rounded-full border border-gray-100 hover:scale-110 shadow-sm" 
+                        style={{ backgroundColor: c }}
+                      ></button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-50 pt-3 flex items-center justify-between">
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Custom</p>
+                   <input 
+                     type="color" 
+                     className="w-8 h-8 rounded p-0 border-none cursor-pointer overflow-hidden bg-transparent"
+                     onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+                   />
+                </div>
               </div>
             </div>
+
+            {/* Highlight Color Picker */}
             <div className="relative group">
               <button className="p-2 rounded hover:bg-gray-100 flex items-center gap-1" title="Highlight">
                 <Highlighter size={18} />
                 <div className="w-4 h-4 rounded-sm border" style={{ backgroundColor: editor.getAttributes('highlight').color || 'transparent' }}></div>
               </button>
-              <div className="hidden group-hover:grid grid-cols-5 gap-1.5 absolute top-full left-0 mt-2 bg-white p-3 border border-gray-100 rounded-xl shadow-2xl z-50 w-44">
-                {[
-                  'transparent', '#F1F1F0', '#E5E7EB', '#D1D5DB', '#9CA3AF',
-                  '#FEF9C3', '#FEF08A', '#FDE047', '#FACC15', '#EAB308', // Yellows
-                  '#DCFCE7', '#BBF7D0', '#86EFAC', '#4ADE80', '#22C55E', // Greens
-                  '#DBEAFE', '#BFDBFE', '#93C5FD', '#60A5FA', '#3B82F6', // Blues
-                  '#FCE7F3', '#FBCFE8', '#F9A8D4', '#F472B6', '#EC4899'  // Pinks
-                ].map(c => (
-                  <button key={c} onClick={() => c === 'transparent' ? editor.chain().focus().unsetHighlight().run() : editor.chain().focus().toggleHighlight({ color: c }).run()} className="w-6 h-6 rounded-md border border-gray-100 hover:scale-125 transition-transform" style={{ backgroundColor: c }}></button>
-                ))}
+              <div className="hidden group-hover:flex flex-col absolute top-full left-0 mt-2 bg-white p-4 border border-gray-100 rounded-xl shadow-2xl z-50 w-[300px]">
+                <button 
+                  onClick={() => editor.chain().focus().unsetHighlight().run()}
+                  className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-gray-50 rounded-lg text-sm font-semibold text-gray-700 mb-3 transition-colors"
+                >
+                  <Eraser size={14} className="text-gray-400" /> Clear Highlight
+                </button>
+                
+                <div className="grid grid-cols-10 gap-1 mb-4">
+                  {COLOR_PALETTE.flat().map(c => (
+                    <button 
+                      key={c} 
+                      onClick={() => editor.chain().focus().toggleHighlight({ color: c }).run()} 
+                      className={`w-5.5 h-5.5 rounded-full border border-gray-100 hover:scale-125 transition-all ${editor.isActive('highlight', { color: c }) ? 'ring-2 ring-offset-1 ring-[#E94560]' : ''}`} 
+                      style={{ backgroundColor: c }}
+                      title={c}
+                    ></button>
+                  ))}
+                </div>
+
+                <div className="border-t border-gray-50 pt-3">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Standard</p>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {STANDARD_COLORS.map(c => (
+                      <button 
+                        key={c} 
+                        onClick={() => editor.chain().focus().toggleHighlight({ color: c }).run()} 
+                        className="w-7 h-7 rounded-full border border-gray-100 hover:scale-110 shadow-sm" 
+                        style={{ backgroundColor: c }}
+                      ></button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-gray-50 pt-3 flex items-center justify-between">
+                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Custom</p>
+                   <input 
+                     type="color" 
+                     className="w-8 h-8 rounded p-0 border-none cursor-pointer overflow-hidden bg-transparent"
+                     onChange={(e) => editor.chain().focus().toggleHighlight({ color: e.target.value }).run()}
+                   />
+                </div>
               </div>
             </div>
           </div>
