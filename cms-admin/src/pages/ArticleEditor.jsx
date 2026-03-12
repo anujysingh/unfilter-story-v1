@@ -616,38 +616,13 @@ export default function ArticleEditor() {
     }
   }, [updateCounter, headline, editor, status, category, tags])
 
-  // Block Drag Handle positioning logic
+  // Scroll listener for sticky header effects
+  const [isScrolled, setIsScrolled] = useState(false)
   useEffect(() => {
-    if (editorMode !== 'block') return
-
-    const handleMouseOver = (e) => {
-      const editorEl = document.querySelector('.is-block-editor')
-      if (!editorEl) return
-
-      const target = e.target.closest('.is-block-editor > *')
-      const handle = document.getElementById('block-drag-handle')
-      
-      if (target && handle) {
-        const rect = target.getBoundingClientRect()
-        const editorRect = editorEl.getBoundingClientRect()
-        
-        handle.style.opacity = '1'
-        handle.style.top = `${rect.top - editorRect.top + 8}px`
-        handle.style.left = `-40px`
-      } else if (handle) {
-        handle.style.opacity = '0'
-      }
-    }
-
-    const editorEl = document.querySelector('.is-block-editor')
-    if (editorEl) {
-      editorEl.addEventListener('mouseover', handleMouseOver)
-    }
-
-    return () => {
-      if (editorEl) editorEl.removeEventListener('mouseover', handleMouseOver)
-    }
-  }, [editorMode, updateCounter])
+    const handleScroll = () => setIsScrolled(window.scrollY > 100)
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Handle persistent colors across selection changes and new lines
   useEffect(() => {
@@ -698,43 +673,54 @@ export default function ArticleEditor() {
   return (
     <div className="max-w-5xl mx-auto pb-20">
       {/* Premium Header */}
-      <div className="sticky top-4 z-40 flex items-center justify-between mb-8 bg-white/80 backdrop-blur-xl p-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-white/20 transition-all duration-300">
-        <div className="flex items-center gap-4">
-           <button onClick={() => navigate('/articles')} className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-600">
-              <ArrowLeft size={24} />
-           </button>
-           <div>
-              <h2 className="text-xl font-bold text-gray-900 leading-tight">
-                {id ? 'Edit Article' : 'Create New Article'}
-              </h2>
-              <p className="text-sm text-gray-400 font-medium flex items-center gap-2">
-                {status === 'published' ? (
-                  <span className="flex items-center text-green-600"><Check className="w-3 h-3 mr-1"/> Published</span>
-                ) : isAutoSaving ? (
-                  <span className="flex items-center"><RefreshCw className="w-3 h-3 mr-1 animate-spin"/> Saving...</span>
-                ) : lastSaved ? (
-                  <span className="flex items-center"><CheckCircle2 className="w-3 h-3 mr-1 text-green-500"/> Auto-saved at {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
-                ) : (
-                  'Drafting...'
-                )} 
-              </p>
-           </div>
-        </div>
-        <div className="flex items-center gap-3">
-           <button 
-             onClick={handleSaveDraft}
-             disabled={isSaving}
-             className="flex items-center px-4 py-2 text-gray-700 font-bold bg-white border border-gray-100 rounded-xl hover:bg-gray-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
-           >
-              <Save className="mr-2.5 w-4.5 h-4.5 opacity-60" /> {isSaving ? 'Saving...' : 'Save Draft'}
-           </button>
-           <button 
-             onClick={handlePublish}
-             disabled={isSaving}
-             className="flex items-center px-6 py-2 text-white font-black bg-[#E94560] rounded-xl hover:bg-[#d63d56] transition-all shadow-lg shadow-[#E94560]/25 active:scale-95 disabled:opacity-50"
-           >
-              <span className="mr-2.5">{isSaving ? 'Sending...' : 'Publish Now'}</span> <Send className="w-4.5 h-4.5" />
-           </button>
+      {/* Floating Global Header */}
+      <div className={`sticky top-0 z-50 transition-all duration-500 ${isScrolled ? 'py-3' : 'py-6'}`}>
+        <div className={`flex items-center justify-between bg-white/70 backdrop-blur-2xl px-6 py-4 rounded-3xl border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-500 ${isScrolled ? 'mx-0 rounded-none border-x-0 border-t-0 bg-white/90 shadow-sm' : ''}`}>
+          <div className="flex items-center gap-5">
+             <button onClick={() => navigate('/articles')} className="p-2.5 hover:bg-gray-100 rounded-2xl transition-all active:scale-90 text-gray-500">
+                <ArrowLeft size={22} />
+             </button>
+             <div className="flex flex-col">
+                <div className="flex items-center gap-3">
+                   <h2 className={`font-black text-gray-900 leading-tight transition-all duration-300 ${isScrolled ? 'text-lg max-w-[300px] truncate' : 'text-xl'}`}>
+                     {isScrolled && headline ? headline : (id ? 'Edit Article' : 'Create New Article')}
+                   </h2>
+                   <div className="h-4 w-px bg-gray-200"></div>
+                   <div className="text-[10px] font-black tracking-widest text-[#E94560] uppercase">
+                     {status}
+                   </div>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <div className={`w-2 h-2 rounded-full ${isAutoSaving ? 'bg-amber-400 animate-pulse' : 'bg-green-500'}`}></div>
+                  <p className="text-[11px] text-gray-400 font-bold uppercase tracking-tight">
+                    {isAutoSaving ? (
+                      'Synchronizing...'
+                    ) : lastSaved ? (
+                      `Securely saved • ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                    ) : (
+                      'Workspace Ready'
+                    )} 
+                  </p>
+                </div>
+             </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+             <button 
+               onClick={handleSaveDraft}
+               disabled={isSaving}
+               className="hidden md:flex items-center px-5 py-2.5 text-gray-600 font-bold bg-white border border-gray-100 rounded-2xl hover:bg-gray-50 hover:text-gray-900 transition-all active:scale-95 disabled:opacity-50"
+             >
+                <Save className="mr-2.5 w-4.5 h-4.5 opacity-40" /> {isSaving ? 'Saving...' : 'Draft'}
+             </button>
+             <button 
+               onClick={handlePublish}
+               disabled={isSaving}
+               className="flex items-center px-7 py-3 text-white font-black bg-[#E94560] rounded-2xl hover:bg-[#d63d56] transition-all shadow-[0_10px_30px_rgba(233,69,96,0.3)] active:scale-95 disabled:opacity-50"
+             >
+                <span className="mr-2.5">{isSaving ? 'Sending...' : 'Publish'}</span> <Send className="w-5 h-5" />
+             </button>
+          </div>
         </div>
       </div>
 
@@ -839,7 +825,8 @@ export default function ArticleEditor() {
       </div>
 
       {/* Styled Toolbar */}
-      <div className="sticky top-28 z-30 bg-white/80 backdrop-blur-md border border-gray-100 rounded-xl p-2 mb-6 shadow-md flex flex-wrap gap-1 items-center">
+      {/* Styled Toolbar */}
+      <div className={`sticky z-40 transition-all duration-300 ${isScrolled ? 'top-20' : 'top-32'} bg-white/80 backdrop-blur-md border border-gray-100 rounded-2xl p-2.5 mb-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex flex-wrap gap-1 items-center`}>
         <div className="flex items-center gap-1 pr-2 border-r border-gray-200">
           <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} tooltip="Bold"><Bold size={18}/></ToolbarButton>
           <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} tooltip="Italic"><Italic size={18}/></ToolbarButton>
