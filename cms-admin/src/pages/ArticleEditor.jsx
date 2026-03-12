@@ -233,10 +233,10 @@ export default function ArticleEditor() {
       StarterKit.configure({
         history: true,
         heading: { levels: [1, 2, 3, 4, 5, 6] },
-        codeBlock: false,
+        codeBlock: true,
       }),
       UnderlineExtension,
-      HighlightExtension,
+      HighlightExtension.configure({ multicolor: true }),
       LinkExtension.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -245,6 +245,10 @@ export default function ArticleEditor() {
       }),
       TextStyle,
       Color,
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
       FontFamily,
       FontSize,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
@@ -505,24 +509,68 @@ export default function ArticleEditor() {
         </div>
 
         <div className="flex items-center gap-1 px-2 border-r border-gray-200">
-          <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} isActive={editor.isActive('heading', { level: 1 })} tooltip="H1"><Heading1 size={18}/></ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} isActive={editor.isActive('heading', { level: 2 })} tooltip="H2"><Heading2 size={18}/></ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} isActive={editor.isActive('heading', { level: 3 })} tooltip="H3"><Heading3 size={18}/></ToolbarButton>
+          <select 
+            className="border border-gray-200 rounded-md text-sm px-2 py-1 h-[34px] focus:border-[#E94560] outline-none"
+            onChange={e => {
+              const val = e.target.value
+              if (val === 'p') editor.chain().focus().setParagraph().run()
+              else editor.chain().focus().toggleHeading({ level: parseInt(val) }).run()
+            }}
+            value={editor.isActive('heading') ? editor.getAttributes('heading').level : 'p'}
+          >
+            <option value="p">Paragraph</option>
+            <option value="1">Heading 1</option>
+            <option value="2">Heading 2</option>
+            <option value="3">Heading 3</option>
+            <option value="4">Heading 4</option>
+            <option value="5">Heading 5</option>
+            <option value="6">Heading 6</option>
+          </select>
         </div>
 
         <div className="flex items-center gap-1 px-2 border-r border-gray-200">
           <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive('bulletList')} tooltip="Bullet List"><List size={18}/></ToolbarButton>
           <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive('orderedList')} tooltip="Numbered List"><ListOrdered size={18}/></ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} tooltip="Quote"><Quote size={18}/></ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} isActive={editor.isActive('taskList')} tooltip="Checklist"><CheckSquare size={18}/></ToolbarButton>
         </div>
 
-        <div className="flex items-center gap-1 px-2 pr-4 border-r border-gray-200">
+        <div className="flex items-center gap-1 px-2 border-r border-gray-200">
           <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('left').run()} isActive={editor.isActive({ textAlign: 'left' })} tooltip="Align Left"><AlignLeft size={18}/></ToolbarButton>
           <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('center').run()} isActive={editor.isActive({ textAlign: 'center' })} tooltip="Align Center"><AlignCenter size={18}/></ToolbarButton>
           <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('right').run()} isActive={editor.isActive({ textAlign: 'right' })} tooltip="Align Right"><AlignRight size={18}/></ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('justify').run()} isActive={editor.isActive({ textAlign: 'justify' })} tooltip="Justify"><AlignJustify size={18}/></ToolbarButton>
+        </div>
+
+        <div className="flex items-center gap-2 px-2 border-r border-gray-200">
+          <div className="flex items-center gap-1">
+            <div className="relative group">
+              <button className="p-2 rounded hover:bg-gray-100 flex items-center gap-1" title="Text Color">
+                <Type size={18} style={{ color: editor.getAttributes('textStyle').color || 'inherit' }} />
+                <div className="w-4 h-4 rounded-sm border" style={{ backgroundColor: editor.getAttributes('textStyle').color || '#000' }}></div>
+              </button>
+              <div className="hidden group-hover:grid grid-cols-5 gap-1 absolute top-full left-0 mt-1 bg-white p-2 border rounded shadow-xl z-50 w-32">
+                {['#000000', '#333333', '#666666', '#E94560', '#0f62fe', '#198038', '#d12771', '#8a3ffc', '#fa4d56', '#ff832b'].map(c => (
+                  <button key={c} onClick={() => editor.chain().focus().setColor(c).run()} className="w-5 h-5 rounded-sm border hover:scale-110" style={{ backgroundColor: c }}></button>
+                ))}
+              </div>
+            </div>
+            <div className="relative group">
+              <button className="p-2 rounded hover:bg-gray-100 flex items-center gap-1" title="Highlight">
+                <Highlighter size={18} />
+                <div className="w-4 h-4 rounded-sm border" style={{ backgroundColor: editor.getAttributes('highlight').color || 'transparent' }}></div>
+              </button>
+              <div className="hidden group-hover:grid grid-cols-5 gap-1 absolute top-full left-0 mt-1 bg-white p-2 border rounded shadow-xl z-50 w-32">
+                {['transparent', '#f1f1f0', '#fbbf24', '#86efac', '#93c5fd', '#f9a8d4', '#c4b5fd', '#fdba74', '#5eead4', '#cbd5e1'].map(c => (
+                  <button key={c} onClick={() => c === 'transparent' ? editor.chain().focus().unsetHighlight().run() : editor.chain().focus().toggleHighlight({ color: c }).run()} className="w-5 h-5 rounded-sm border hover:scale-110" style={{ backgroundColor: c }}></button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-1 pl-2">
+          <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} isActive={editor.isActive('codeBlock')} tooltip="Code Block"><Code size={18}/></ToolbarButton>
+          <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive('blockquote')} tooltip="Blockquote"><Quote size={18}/></ToolbarButton>
           <button 
             onClick={() => {
               const url = window.prompt('Enter Image URL')
