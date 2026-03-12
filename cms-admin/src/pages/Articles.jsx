@@ -47,8 +47,10 @@ export default function Articles() {
   }
 
   useEffect(() => {
-    fetchArticles()
-  }, [])
+    fetchArticles();
+    const interval = setInterval(fetchArticles, 30000); // refresh every 30s
+    return () => clearInterval(interval);
+  }, []);
 
   const handleQuickRangeChange = (range) => {
     setQuickRange(range)
@@ -230,7 +232,7 @@ export default function Articles() {
                onChange={(e) => setFilter(e.target.value)} 
                className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer min-w-[100px]"
             >
-               <option value="all">Status</option>
+               <option value="all">All Status</option>
                <option value="published">Published</option>
                <option value="scheduled">Scheduled</option>
                <option value="draft">Draft</option>
@@ -246,7 +248,7 @@ export default function Articles() {
                onChange={(e) => setCategoryFilter(e.target.value)} 
                className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer min-w-[100px] capitalize"
             >
-               <option value="all">Category</option>
+               <option value="all">All Category</option>
                {availableCategories.filter(c => c !== 'all').map(cat => (
                  <option key={cat} value={cat}>{cat}</option>
                ))}
@@ -261,7 +263,7 @@ export default function Articles() {
                onChange={(e) => setTagFilter(e.target.value)} 
                className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer min-w-[100px] capitalize"
             >
-               <option value="all">Tag</option>
+               <option value="all">All Tags</option>
                {availableTags.filter(t => t !== 'all').map(tag => (
                  <option key={tag} value={tag}>{tag}</option>
                ))}
