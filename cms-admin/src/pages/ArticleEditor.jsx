@@ -616,12 +616,18 @@ export default function ArticleEditor() {
     }
   }, [updateCounter, headline, editor, status, category, tags])
 
-  // Scroll listener for sticky header effects
+  // Sentinel based scroll detection for reliable sticky behavior in any container
+  const sentinelRef = useRef(null)
   const [isScrolled, setIsScrolled] = useState(false)
+
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 100)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsScrolled(!entry.isIntersecting),
+      { threshold: [0], rootMargin: '-20px 0px 0px 0px' }
+    )
+
+    if (sentinelRef.current) observer.observe(sentinelRef.current)
+    return () => observer.disconnect()
   }, [])
 
   // Handle persistent colors across selection changes and new lines
@@ -671,11 +677,12 @@ export default function ArticleEditor() {
   )
 
   return (
-    <div className="max-w-5xl mx-auto pb-20">
-      {/* Premium Header */}
+    <div className="max-w-5xl mx-auto pb-20 relative">
+      <div ref={sentinelRef} className="absolute top-0 h-1 w-full pointer-events-none" aria-hidden="true" />
+      
       {/* Floating Global Header */}
-      <div className={`sticky top-0 z-50 transition-all duration-500 ${isScrolled ? 'py-3' : 'py-6'}`}>
-        <div className={`flex items-center justify-between bg-white/70 backdrop-blur-2xl px-6 py-4 rounded-3xl border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-500 ${isScrolled ? 'mx-0 rounded-none border-x-0 border-t-0 bg-white/90 shadow-sm' : ''}`}>
+      <div className={`sticky top-0 z-50 transition-all duration-500 ${isScrolled ? 'pt-0' : 'pt-6'}`}>
+        <div className={`flex items-center justify-between bg-white/70 backdrop-blur-2xl px-6 py-4 rounded-3xl border border-white/40 shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all duration-500 ${isScrolled ? 'mx-[-32px] rounded-none border-x-0 border-t-0 bg-white/95 shadow-md py-3' : ''}`}>
           <div className="flex items-center gap-5">
              <button onClick={() => navigate('/articles')} className="p-2.5 hover:bg-gray-100 rounded-2xl transition-all active:scale-90 text-gray-500">
                 <ArrowLeft size={22} />
@@ -825,8 +832,7 @@ export default function ArticleEditor() {
       </div>
 
       {/* Styled Toolbar */}
-      {/* Styled Toolbar */}
-      <div className={`sticky z-40 transition-all duration-300 ${isScrolled ? 'top-20' : 'top-32'} bg-white/80 backdrop-blur-md border border-gray-100 rounded-2xl p-2.5 mb-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex flex-wrap gap-1 items-center`}>
+      <div className={`sticky z-40 transition-all duration-300 ${isScrolled ? 'top-[78px]' : 'top-[100px]'} bg-white/90 backdrop-blur-md border border-gray-100 rounded-2xl p-2.5 mb-8 shadow-[0_8px_30px_rgba(0,0,0,0.04)] flex flex-wrap gap-1 items-center`}>
         <div className="flex items-center gap-1 pr-2 border-r border-gray-200">
           <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')} tooltip="Bold"><Bold size={18}/></ToolbarButton>
           <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')} tooltip="Italic"><Italic size={18}/></ToolbarButton>
