@@ -11,114 +11,103 @@
 ## 1. Executive Summary
 
 **Unfilter Story** is a high-performance, design-centric media platform optimized for technical precision and editorial efficiency. It serves two distinct audiences:
-1.  **Readers**: A lightning-fast, branding-consistent news portal built with Astro 5.
-2.  **Editors/Admins**: A professional-grade CMS dashboard with AI-assisted drafting, real-time article lifecycle management, and a robust support infrastructure.
+1.  **Readers**: A lightning-fast, branding-consistent news portal built with Astro 5, delivering content with sub-second load times.
+2.  **Editors/Admins**: A professional-grade CMS dashboard with AI-assisted drafting, real-time article lifecycle management, and advanced metadata controls.
+
+The platform is built on the pillar of "Technical Precision," merging high-end editorial tools with a brutalist, IBM-inspired aesthetic.
 
 ---
 
 ## 2. IBM Branding & Design System
 
-The platform strictly follows the **IBM "Technical Precision & Grid Brutalism"** visual language.
+The platform strictly follows the **IBM "Technical Precision & Grid Brutalism"** visual language to convey reliability and technical depth.
 
-### 2.1 Visual Identity
+### 2.1 Core Visual Language
 *   **Typography**: 
-    *   **IBM Plex Sans**: Standard UI elements, menus, and article body text.
-    *   **IBM Plex Mono**: Metadata (dates, counts, categories), code snippets, and technical indicators.
+    *   **IBM Plex Sans**: Used for standard UI elements, menus, and article body text to ensure maximum readability.
+    *   **IBM Plex Mono**: Used for technical metadata (dates, counts, categories), code snippets, and UI indicators.
 *   **Color Palette**:
-    *   **Primary Background**: IBM Gray 100 (#161616) or Pure White (#FFFFFF).
-    *   **UI Surfaces**: IBM Gray 90 (#262626) with refined elevation.
-    *   **Accents**: IBM Blue 60 (#0F62FE) for primary actions and Unfilter Red (#E94560) for alerts.
-*   **Branding Elements**: Centralized usage of the **IBM 8-bar logo** and consistent 1px grid-line borders to convey technical robustness.
+    *   **Primary Background**: IBM Gray 100 (#161616) for dark mode / White (#FFFFFF) for light mode.
+    *   **UI Surfaces**: IBM Gray 90 (#262626) providing subtle depth.
+    *   **Accents**: IBM Blue 60 (#0F62FE) for primary actions and Unfilter Red (#E94560) for critical states.
+*   **Grid System**: A rigorous 1px grid-line border system (IBM Gray 80) is used across the dashboard to emphasize structure and precision.
+*   **Iconography**: Strict usage of **Lucide Icons** styled with consistent stroke weights.
 
 ---
 
 ## 3. CMS Admin — Article Management Lifecycle
 
-The CMS dashboard provide editors with granular control over the article release cycle.
+The CMS dashboard provides editors with absolute control over the article release cycle through a highly interactive interface.
 
 ### 3.1 Advanced Action System
-Every article in the dashboard features a **Context-Aware Action Dropdown** that adapts based on the article's current status:
-*   **Draft/Unpublished Articles**:
-    *   **Edit Article**: Direct jump to the rich text editor.
-    *   **Publish Now**: Immediate transition to live state.
-*   **Scheduled Articles**:
-    *   **Publish Now**: Force an immediate release.
-    *   **Change Date**: Reschedule via an inline calendar/time picker.
-    *   **Cancel Scheduling**: Revert the article to "Draft" status (Requires Confirmation).
-*   **Published Articles**:
-    *   **Unpublish**: Safely take an article offline (Requires Confirmation).
+Every article in the dashboard features a **Context-Aware Action Dropdown** (z-index: 100) that adapts based on the article's state:
+*   **Draft / Unpublished**:
+    *   **Edit Article**: Opens the Pro Editor.
+    *   **Publish Now**: Triggers immediate publication.
+*   **Scheduled**:
+    *   **Publish Now**: Forces immediate release, bypassing the schedule.
+    *   **Change Date**: Inline date-time adjustment via technical calendar picker.
+    *   **Cancel Scheduling**: Reverts article to "Draft" state (Requires confirmation).
+*   **Published**:
+    *   **Unpublish**: Safely takes content offline while preserving it in the dashboard (Requires confirmation).
 
-### 3.2 Premium Modal System
-All critical actions (Delete, Unpublish, Cancel Scheduling, Publishing) utilize **Custom High-Aesthetic Modals** instead of browser-based prompts. 
-*   **Features**: Glassmorphism backdrops, specific Lucide icons, and descriptive action labels (e.g., "Yes, Unpublish", "Confirm Cancellation").
+### 3.2 Premium Modal & Confirmation System
+All destructive or critical actions (Delete, Unpublish, Cancel Scheduling) utilize **Custom High-Aesthetic Modals** (Glassmorphism effect) instead of browser prompts. 
+*   **Dynamic Labels**: Buttons display context-specific text like "Yes, Unpublish" or "Cancel Scheduling" to prevent user error.
 
-### 3.3 Dynamic Filtering & Search
-*   **Real-time Synchronization**: The "Category" and "Tags" filters update instantly when new metadata is created in sibling tabs.
-*   **Headline Search**: High-performance search by headline with debounce logic.
-*   **Date Range Filtering**: Quick presets (Today, Last 7 Days) or custom technical date range selection.
+### 3.3 Search & Discovery Suite
+*   **Cross-Tab Metadata Sync**: Categories and Tags filters update instantly when modified in and other parts of the CMS, ensuring no stale filter data.
+*   **Technical Search**: Headline-based search with real-time results.
+*   **Status Filters**: Quick filtering by Published, Scheduled, Draft, or Unpublished states.
+*   **Technical Date Range**: Filtering articles using a precision "From - To" date picker with quick presets (Today, Yesterday, Last 7 Days).
 
 ---
 
 ## 4. CMS Admin — Pro Article Editor
 
-A high-performance drafting environment optimized for modern web journalism.
+A world-class writing environment designed for modern journalists.
 
-### 4.1 TipTap "Pro" Implementation
-*   **Sticky Premium Toolbar**: A glassmorphism-enhanced toolbar with technical precision controls.
+### 4.1 TipTap Editor Suite
+*   **Sticky Premium Toolbar**: A technical toolbar that remains fixed at the top during scrolling, featuring glassmorphism and IBM-styled controls.
 *   **AI Writing Hub**:
-    *   **Tone Transition**: Modify highlighted text into Professional, Casual, or Concise styles.
-    *   **Smart Drafting**: Generate or expand content based on headlines.
-*   **Technical Metadata Control**: Integrated fields for SEO titles, meta descriptions, categories, and tags with multi-select capabilities.
+    *   **Rewrite & Tone**: Highlight any text to instantly rewrite it in Professional, Casual, or Concise tones.
+    *   **Draft Generation**: AI-powered content expansion based on minimal input.
+*   **Grammar Assistant**: Inline technical underline and correction system for editorial precision.
+*   **Rich Media Nodes**: Custom image nodes with caption, credit, and alignment controls.
+*   **Metadata Sidebar**: Integrated controls for SEO Title, Meta Description, Categories, and Tags.
 
 ---
 
-## 5. Support Platform — Room & Ticket Management
+## 5. Technical Architecture
 
-A temporary communication bridge between Algo Providers and Clients.
+### 6.1 Frontend Development
+*   **Public Site**: Built with **Astro 5** for maximum SEO and performance. Uses a "Zero-JS by default" approach with Islands architecture for interactive elements.
+*   **CMS Dashboard**: Built with **React 18** and **Vite**, featuring sub-200ms HMR for an instantaneous development and editing experience.
 
-### 5.1 Temporary Support Rooms
-*   **Invite Link Logic**: Generates secure, unique URLs for restricted access.
-*   **Automated Expiry**: 
-    *   Rooms defaulted to 15 days; extendable by Admin.
-    *   Transition to read-only state upon expiry.
-*   **Data Privacy**: Automated purge of archived rooms after 30 days.
-
----
-
-## 6. Technical Architecture
-
-### 6.1 Modern Stack
-*   **Frontend**: 
-    *   **Public Site**: Astro 5 (Zero-JS baseline, Islands architecture).
-    *   **CMS Dashboard**: React 18 with Vite for instantaneous HMR.
-*   **Backend**: Fastify for high-throughput API performance.
-*   **Database**: PostgreSQL 16 managed via Prisma ORM.
-*   **Real-time Layers**: Socket.IO for chat and real-time dashboard updates.
-
-### 6.2 Key Indicators
-*   **SEO**: Semantic HTML5 hierarchy, automated meta-tag generation, and fast TTI scores.
-*   **UX**: Adaptive layouts for mobile and technical tablet environments.
+### 6.2 Data & Logic
+*   **Database**: PostgreSQL 16 managed via Prisma ORM for type-safe database queries.
+*   **Schema**: Robust relational model handling nested Categories, Tags, and Versioning history.
+*   **API**: Fastify (Node.js) providing a low-overhead, high-concurrency backend.
 
 ---
 
-## 7. Project Structure
+## 6. Project Structure
 
 ```text
 unfilter-story/
-├── api-backend/           # Fastify Business Logic
-├── cms-admin/             # React Editorial Dashboard
-├── public-site/           # Astro 5 High-Speed News Site
-└── PRD.md                 # Product Definitions
+├── api-backend/           # Fastify Business Logic & Prisma Schema
+├── cms-admin/             # React SPA (The "Pro" Dashboard)
+├── public-site/           # Astro 5 High-Speed Public Website
+└── PRD.md                 # Current Implementation Reference
 ```
 
 ---
 
-## 8. Future Roadmap (The Vision for v2.0)
+## 7. Future Roadmap (The Vision for v2.0)
 
-A detailed roadmap for the next major evolution of the platform has been developed. Key focus areas include native RSS feeds, automated newsletters, Razorpay subscriptions, and native mobile applications.
+For features currently in the planning stage (RSS Aggregators, Newsletters, Subscriptions, and Mobile Apps), refer to the dedicated roadmap:
 
-**For the full v2.0 feature analysis, refer to:**  
 📄 [PRD (V.2).md](./PRD%20(V.2).md)
 
 ---
-*Maintained by Antigravity AI — Comprehensive Update v1.6*
+*Maintained by Antigravity AI — End-to-End Update v1.6*
