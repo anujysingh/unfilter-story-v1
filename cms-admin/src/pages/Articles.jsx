@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Search, Filter, MoreHorizontal, CheckCircle2, Clock, Calendar, ArrowRight, History, X, Tag as TagIcon, LayoutGrid, AlertTriangle, Send } from 'lucide-react'
+import { Plus, Search, Filter, MoreHorizontal, CheckCircle2, Clock, Calendar, ArrowRight, History, X, Tag as TagIcon, LayoutGrid, AlertTriangle, Send, Edit3, XCircle, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const getStatusBadge = (status) => {
@@ -406,75 +406,89 @@ export default function Articles() {
                       <MoreHorizontal className="w-5 h-5" />
                     </button>
 
-                    {/* Action Dropdown */}
-                    {openDropdownId === article.id && (
-                       <div className="absolute right-8 top-12 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden text-left" onClick={(e) => e.stopPropagation()}>
-                                 {/* Edit Article is available for all non-published articles */}
-                                 {article.status !== 'published' && (
-                                   <Link 
-                                      to={`/articles/${article.id}`}
-                                      className="w-full block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                                   >
-                                      Edit Article
-                                   </Link>
-                                 )}
+                     {/* Action Dropdown */}
+                     {openDropdownId === article.id && (
+                        <div 
+                          className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-2xl z-[100] text-left py-1" 
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                           {/* Common: Edit */}
+                           {article.status !== 'published' && (
+                             <Link 
+                                to={`/articles/${article.id}`}
+                                className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors"
+                             >
+                                <Edit3 className="w-4 h-4" />
+                                Edit Article
+                             </Link>
+                           )}
 
-                                 {/* Published Status Actions */}
-                                 {article.status === 'published' && (
-                                   <button 
-                                      onClick={() => handleUnpublish(article.id)}
-                                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                                   >
-                                      Unpublish
-                                   </button>
-                                 )}
+                           {/* Status Specific: Published */}
+                           {article.status === 'published' && (
+                             <button 
+                                onClick={() => handleUnpublish(article.id)}
+                                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-amber-600 hover:bg-amber-50 cursor-pointer transition-colors"
+                             >
+                                <AlertTriangle className="w-4 h-4" />
+                                Unpublish
+                             </button>
+                           )}
 
-                                 {/* Scheduled Status Actions */}
-                                 {article.status === 'scheduled' && (
-                                   <>
-                                      <button 
-                                         onClick={() => handlePublishNow(article.id, 'Publish')}
-                                         className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 cursor-pointer font-medium"
-                                      >
-                                         Publish Now
-                                      </button>
-                                      <button 
-                                         onClick={() => {
-                                           setDatePickerId(article.id)
-                                           setNewPublishDate(article.publishedAt ? article.publishedAt.split('T')[0] : '')
-                                         }}
-                                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                                      >
-                                         Change publishing date
-                                      </button>
-                                       <button 
-                                          onClick={() => handleCancelSchedule(article.id)}
-                                          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 cursor-pointer font-medium border-t border-gray-100 mt-1 pt-2"
-                                       >
-                                          Cancel Scheduling
-                                       </button>
-                                   </>
-                                 )}
+                           {/* Status Specific: Scheduled */}
+                           {article.status === 'scheduled' && (
+                             <div className="border-t border-gray-100 mt-1 pt-1">
+                                <button 
+                                   onClick={() => handlePublishNow(article.id, 'Publish')}
+                                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 cursor-pointer font-semibold transition-colors"
+                                >
+                                   <Send className="w-4 h-4" />
+                                   Publish Now
+                                </button>
+                                <button 
+                                   onClick={() => {
+                                     setDatePickerId(article.id)
+                                     setNewPublishDate(article.publishedAt ? article.publishedAt.split('T')[0] : '')
+                                   }}
+                                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors"
+                                >
+                                   <Calendar className="w-4 h-4" />
+                                   Change Date
+                                </button>
+                                <button 
+                                   onClick={() => handleCancelSchedule(article.id)}
+                                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 cursor-pointer font-medium border-t border-gray-100 mt-1 pt-1 transition-colors"
+                                >
+                                   <XCircle className="w-4 h-4" />
+                                   Cancel Scheduling
+                                </button>
+                             </div>
+                           )}
 
-                                 {/* Unpublished Status Actions */}
-                                 {article.status === 'unpublished' && (
-                                   <button 
-                                      onClick={() => handlePublishNow(article.id, 'Republish')}
-                                      className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 cursor-pointer font-medium"
-                                   >
-                                      Republish Now
-                                   </button>
-                                 )}
+                           {/* Status Specific: Unpublished / Draft */}
+                           {(article.status === 'unpublished' || article.status === 'draft') && (
+                             <div className="border-t border-gray-100 mt-1 pt-1">
+                               <button 
+                                  onClick={() => handlePublishNow(article.id, 'Republish')}
+                                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 cursor-pointer font-semibold transition-colors"
+                               >
+                                  <Send className="w-4 h-4" />
+                                  {article.status === 'draft' ? 'Publish Now' : 'Republish Now'}
+                               </button>
+                             </div>
+                           )}
 
-                                 {/* Preview Option (Always visible) */}
-                                 <button 
-                                    onClick={() => window.open(`http://localhost:4321/article/${article.slug}`, '_blank')}
-                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer border-t border-gray-100 mt-1 pt-2"
-                                 >
-                                    Preview / View
-                                 </button>
-                       </div>
-                    )}
+                           {/* Common: View */}
+                           <div className="border-t border-gray-100 mt-1 pt-1">
+                             <button 
+                                onClick={() => window.open(`http://localhost:4321/article/${article.slug}`, '_blank')}
+                                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors"
+                             >
+                                <ExternalLink className="w-4 h-4" />
+                                View Article
+                             </button>
+                           </div>
+                        </div>
+                     )}
                   </td>
                 </tr>
               ))}
