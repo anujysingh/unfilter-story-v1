@@ -1,11 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
-  Save, ExternalLink, ArrowLeft, Bold, Italic, Strikethrough, Underline, Highlighter, 
-  Link as LinkIcon, Unlink, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6,
-  Code, Copy, CheckCircle2, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  Table as TableIcon, CheckSquare, Minus, Image as ImageIcon, UploadCloud, Link2, Settings2, Trash2, Video, RefreshCw,
-  Type, Check, X, Languages, Eye, Send, GripVertical, AlertCircle, Layout, Eraser
+  Type, Check, X, Languages, Eye, Send, GripVertical, AlertCircle, Layout, Eraser, Settings2, ArrowLeft, Save, CheckCircle2, RefreshCw, Bold, Italic, Underline, Strikethrough, List, ListOrdered, CheckSquare, AlignLeft, AlignCenter, AlignRight, AlignJustify, Type as TypeIcon, Highlighter, Code, Quote, Image as ImageIcon, Link as LinkIcon, UploadCloud, Minus, Trash2, Plus, Hash, Tag
 } from 'lucide-react'
 
 const COLOR_PALETTE = [
@@ -20,6 +16,9 @@ const COLOR_PALETTE = [
 ]
 
 const STANDARD_COLORS = ['#000000', '#FFFFFF', '#4A86E8', '#EA4335', '#FBBC04', '#34A853', '#FF6D01', '#46BDC6']
+const AVAILABLE_CATEGORIES = ['Tech', 'Lifestyle', 'Business', 'Finance', 'Entertainment', 'Health', 'Sports', 'Education', 'Politics', 'Science']
+const AVAILABLE_TAGS = ['AI', 'Startups', 'Coding', 'productivity', 'Design', 'WebDev', 'Investment', 'Stock Market', 'Future', 'Innovation']
+
 import { useParams } from 'react-router-dom'
 import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper, ReactRenderer } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
@@ -324,7 +323,11 @@ export default function ArticleEditor() {
   const [lastSaved, setLastSaved] = useState(null)
   const [isAutoSaving, setIsAutoSaving] = useState(false)
   const [editorMode, setEditorMode] = useState('normal') // 'normal' or 'block'
+  const [category, setCategory] = useState('')
+  const [tags, setTags] = useState([])
+  const [tagInput, setTagInput] = useState('')
   const autoSaveTimerRef = useRef(null)
+
 
   const editor = useEditor({
     extensions: [
@@ -419,6 +422,8 @@ export default function ArticleEditor() {
           if (data) {
             setHeadline(data.headline || '')
             setStatus(data.status || 'draft')
+            setCategory(data.category || '')
+            setTags(data.tags || [])
             editor.commands.setContent(data.body || '')
           }
         })
@@ -433,7 +438,9 @@ export default function ArticleEditor() {
     const articleData = {
       headline,
       body: editor.getHTML(),
-      status: 'published'
+      status: 'published',
+      category,
+      tags
     }
 
     try {
@@ -468,7 +475,9 @@ export default function ArticleEditor() {
     const articleData = {
       headline: headline || 'Untitled',
       body: editor.getHTML(),
-      status: 'draft'
+      status: 'draft',
+      category,
+      tags
     }
 
     try {
@@ -628,11 +637,74 @@ export default function ArticleEditor() {
       {/* Article Title Block */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 mb-6">
          <input 
-            className="text-4xl font-extrabold w-full outline-none placeholder-gray-100 text-gray-900 border-none focus:ring-0"
+            className="text-4xl font-extrabold w-full outline-none placeholder-gray-100 text-gray-900 border-none focus:ring-0 mb-6"
             placeholder="Enter Article Headline..."
             value={headline}
             onChange={e => setHeadline(e.target.value)}
           />
+          
+          <div className="flex flex-wrap gap-8 pt-6 border-t border-gray-50">
+            {/* Category Selection */}
+            <div className="flex-1 min-w-[200px]">
+              <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                <Layout size={12} className="text-[#E94560]" /> Category
+              </label>
+              <select 
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                className="w-full bg-gray-50/50 border border-gray-100 rounded-lg px-3 py-2 text-sm font-semibold text-gray-700 outline-none focus:border-[#E94560] transition-colors appearance-none cursor-pointer"
+              >
+                <option value="">Select Category</option>
+                {AVAILABLE_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Tags Selection */}
+            <div className="flex-[2] min-w-[300px]">
+              <label className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                <Tag size={12} className="text-[#E94560]" /> Tags
+              </label>
+              <div className="flex flex-wrap gap-2 p-2 bg-gray-50/50 border border-gray-100 rounded-lg min-h-[42px]">
+                {tags.map(tag => (
+                  <span key={tag} className="flex items-center gap-1.5 px-2.5 py-1 bg-white border border-gray-100 rounded-md text-xs font-bold text-[#E94560] shadow-sm group">
+                    {tag}
+                    <button onClick={() => setTags(tags.filter(t => t !== tag))} className="text-gray-400 hover:text-red-500">
+                      <X size={10} />
+                    </button>
+                  </span>
+                ))}
+                <input 
+                  type="text"
+                  placeholder="Type and enter..."
+                  className="flex-1 bg-transparent border-none outline-none text-sm min-w-[120px] font-medium"
+                  value={tagInput}
+                  onChange={e => setTagInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && tagInput.trim()) {
+                      e.preventDefault()
+                      if (!tags.includes(tagInput.trim())) {
+                        setTags([...tags, tagInput.trim()])
+                      }
+                      setTagInput('')
+                    }
+                  }}
+                />
+              </div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {AVAILABLE_TAGS.filter(t => !tags.includes(t)).slice(0, 5).map(tag => (
+                  <button 
+                    key={tag}
+                    onClick={() => setTags([...tags, tag])}
+                    className="text-[10px] font-bold text-gray-400 hover:text-[#E94560] hover:bg-white px-2 py-0.5 rounded transition-all border border-transparent hover:border-gray-100"
+                  >
+                    + {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
       </div>
 
       {/* Styled Toolbar */}
