@@ -112,4 +112,13 @@ unfilter-story/
 ```
 
 ---
+
+## 8. Future Roadmap (The Vision for v2.0)
+
+A detailed roadmap for the next major evolution of the platform has been developed. Key focus areas include native RSS feeds, automated newsletters, Razorpay subscriptions, and native mobile applications.
+
+**For the full v2.0 feature analysis, refer to:**  
+📄 [PRD (V.2).md](./PRD%20(V.2).md)
+
+---
 *Maintained by Antigravity AI — Comprehensive Update v1.6*
