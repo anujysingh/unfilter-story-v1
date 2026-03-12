@@ -477,18 +477,6 @@ export default function Articles() {
                              </div>
                            )}
 
-                           {/* Common: View (Hide for scheduled) */}
-                           {article.status !== 'scheduled' && (
-                             <div className="border-t border-gray-100 mt-1 pt-1">
-                               <button 
-                                  onClick={() => window.open(`http://localhost:4321/article/${article.slug}`, '_blank')}
-                                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer transition-colors"
-                               >
-                                  <ExternalLink className="w-4 h-4" />
-                                  View Article
-                               </button>
-                             </div>
-                           )}
                         </div>
                      )}
                   </td>
