@@ -250,6 +250,7 @@ export default function ArticleEditor() {
   const [lastSaved, setLastSaved] = useState(null)
   const [isAutoSaving, setIsAutoSaving] = useState(false)
   const [editorMode, setEditorMode] = useState('normal') // 'normal' or 'block'
+  const autoSaveTimerRef = useRef(null)
 
   const editor = useEditor({
     extensions: [
@@ -321,7 +322,7 @@ export default function ArticleEditor() {
     ],
     editorProps: {
       attributes: {
-        class: editorMode === 'block' ? 'tiptap is-block-editor' : 'tiptap',
+        class: 'tiptap focus:outline-none',
       },
     },
     onTransaction: ({ editor }) => {
@@ -332,26 +333,18 @@ export default function ArticleEditor() {
     }
   })
 
-  useEffect(() => {
-    if (editor) {
-      editor.setOptions({
-        editorProps: {
-          attributes: {
-            class: editorMode === 'block' ? 'tiptap is-block-editor' : 'tiptap',
-          },
-        },
-      })
-    }
-  }, [editorMode, editor])
-
+  // Mode switch is now handled by parent divine class
+  
   useEffect(() => {
     if (id && editor) {
       fetch(`http://localhost:3000/cms/v1/articles/${id}`)
         .then(res => res.json())
         .then(data => {
-          setHeadline(data.headline)
-          setStatus(data.status)
-          editor.commands.setContent(data.body)
+          if (data) {
+            setHeadline(data.headline || '')
+            setStatus(data.status || 'draft')
+            editor.commands.setContent(data.body || '')
+          }
         })
         .catch(err => console.error('Failed to fetch article', err))
     }
@@ -431,19 +424,23 @@ export default function ArticleEditor() {
     }
   }
 
-  // Auto-save logic
+  // Auto-save logic with proper cleanup
   useEffect(() => {
     if (!editor || status === 'published') return
 
-    const timer = setTimeout(() => {
+    if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+
+    autoSaveTimerRef.current = setTimeout(() => {
       const content = editor.getHTML()
-      if (content && content !== '<p></p>') {
+      if (content && content !== '<p></p>' && !isSaving && !isAutoSaving) {
         handleSaveDraft(true)
       }
-    }, 5000) // Auto-save after 5 seconds of inactivity
+    }, 5000)
 
-    return () => clearTimeout(timer)
-  }, [updateCounter, headline])
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+    }
+  }, [updateCounter, headline, editor, status])
 
   // Block Drag Handle positioning logic
   useEffect(() => {
@@ -682,7 +679,17 @@ export default function ArticleEditor() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm min-h-[600px] p-10 relative">
+      <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm min-h-[600px] p-10 relative group ${editorMode === 'block' ? 'is-block-editor-container' : ''}`}>
+        <div className="mb-10">
+          <input 
+            className="text-5xl font-extrabold w-full outline-none placeholder-gray-100 text-gray-900 border-none focus:ring-0 px-0"
+            placeholder="Enter headline here..."
+            value={headline}
+            onChange={e => setHeadline(e.target.value)}
+          />
+          <div className="h-0.5 bg-gray-50 mt-4 w-24"></div>
+        </div>
+
         {editor && <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex bg-white shadow-xl border border-gray-100 rounded-lg relative z-50">
           <div className="flex p-1 gap-0.5">
             <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')}><Bold size={16}/></ToolbarButton>
@@ -691,7 +698,9 @@ export default function ArticleEditor() {
           </div>
         </BubbleMenu>}
 
-        <EditorContent editor={editor} className="prose prose-lg max-w-none outline-none min-h-[500px]" />
+        <div className={editorMode === 'block' ? 'tiptap is-block-editor' : 'tiptap'}>
+          <EditorContent editor={editor} className="prose prose-lg max-w-none focus:outline-none min-h-[500px]" />
+        </div>
         
         {editorMode === 'block' && (
           <div className="absolute left-[-40px] top-0 pointer-events-none transition-all duration-200 opacity-0 group/handle hover:opacity-100" id="block-drag-handle">
