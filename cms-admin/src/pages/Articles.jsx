@@ -155,6 +155,14 @@ export default function Articles() {
                     {/* Action Dropdown */}
                     {openDropdownId === article.id && (
                        <div className="absolute right-8 top-12 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden text-left" onClick={(e) => e.stopPropagation()}>
+                          {article.status === 'draft' && (
+                             <Link 
+                                to={`/articles/${article.id}`}
+                                className="w-full block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
+                             >
+                                Edit Article
+                             </Link>
+                          )}
                           <button 
                              onClick={() => window.open(`http://localhost:4321/article/${article.slug}`, '_blank')}
                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"

@@ -73,6 +73,23 @@ fastify.get('/cms/v1/articles', async (request, reply) => {
   }
 })
 
+fastify.get('/cms/v1/articles/:id', async (request, reply) => {
+  try {
+    const { id } = request.params
+    const article = await prisma.article.findUnique({
+      where: { id },
+      include: {
+        articleTags: true
+      }
+    })
+    if (!article) return reply.code(404).send({ error: 'Article not found' })
+    return article
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Failed to fetch article' })
+  }
+})
+
 fastify.put('/cms/v1/articles/:id', async (request, reply) => {
   try {
     const { id } = request.params

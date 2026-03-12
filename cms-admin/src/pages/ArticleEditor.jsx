@@ -5,8 +5,9 @@ import {
   Link as LinkIcon, Unlink, List, ListOrdered, Quote, Heading1, Heading2, Heading3, Heading4, Heading5, Heading6,
   Code, Copy, CheckCircle2, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Table as TableIcon, CheckSquare, Minus, Image as ImageIcon, UploadCloud, Link2, Settings2, Trash2, Video, RefreshCw,
-  Sparkles, Wand2, Type, Check, X, Languages, Eye, Send
+  Type, Check, X, Languages, Eye, Send
 } from 'lucide-react'
+import { useParams } from 'react-router-dom'
 import { useEditor, EditorContent, ReactNodeViewRenderer, NodeViewWrapper, ReactRenderer } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
@@ -98,71 +99,7 @@ const FONT_CATEGORIES = {
   'Monospace': ["Roboto Mono", "Source Code Pro", "Space Mono", "IBM Plex Mono", "Inconsolata", "JetBrains Mono", "Cousine", "PT Mono", "Anonymous Pro"]
 }
 
-const GrammarChecker = Extension.create({
-  name: 'grammarChecker',
-  addProseMirrorPlugins() {
-    return [
-      new Plugin({
-        key: new PluginKey('grammarChecker'),
-        state: {
-          init() { return DecorationSet.empty },
-          apply(tr, oldState) {
-            if (!tr.docChanged) return oldState.map(tr.mapping, tr.doc)
-            const decorations = []
-            const errors = [
-              { word: 'that is', suggestion: 'which is', message: 'Consider using "which" for non-essential clauses.' },
-              { word: 'with a', suggestion: 'using a', message: 'Clearer phrasing suggested.' },
-              { word: 'building', suggestion: 'constructing', message: 'Stronger verb choice.' }
-            ]
-            tr.doc.descendants((node, pos) => {
-              if (node.isText) {
-                const nodeText = node.text
-                errors.forEach(err => {
-                  let start = 0
-                  while ((start = nodeText.indexOf(err.word, start)) !== -1) {
-                    decorations.push(
-                      Decoration.inline(pos + start, pos + start + err.word.length, {
-                        class: 'grammar-error',
-                        'data-suggestion': err.suggestion,
-                        'data-message': err.message,
-                        style: 'border-bottom: 2px wavy #E94560; cursor: help;'
-                      })
-                    )
-                    start += err.word.length
-                  }
-                })
-              }
-            })
-            return DecorationSet.create(tr.doc, decorations)
-          },
-        },
-        props: {
-          decorations(state) { return this.getState(state) },
-          handleDOMEvents: {
-            mouseover(view, event) {
-              const target = event.target
-              if (target.classList?.contains('grammar-error')) {
-                const suggestion = target.getAttribute('data-suggestion')
-                const start = view.posAtDOM(target, 0)
-                const end = start + target.innerText.length
-                tippy(target, {
-                  content: `<button class="bg-[#E94560] text-white px-2 py-1 rounded text-xs apply-suggestion">Change to "${suggestion}"</button>`,
-                  allowHTML: true, interactive: true, appendTo: () => document.body,
-                  onShown(instance) {
-                    instance.popper.querySelector('.apply-suggestion').addEventListener('click', () => {
-                      view.dispatch(view.state.tr.replaceWith(start, end, view.state.schema.text(suggestion)))
-                      instance.hide()
-                    })
-                  }
-                }).show()
-              }
-            }
-          }
-        }
-      })
-    ]
-  }
-})
+// Removed GrammarChecker extension
 
 const ImageComponent = ({ node, updateAttributes, deleteNode }) => {
   const { src, align, width, caption } = node.attrs
@@ -282,11 +219,12 @@ const getSuggestionItems = ({ query }) => {
 
 export default function ArticleEditor() {
   const navigate = useNavigate()
+  const { id } = useParams()
   const [headline, setHeadline] = useState('')
-  const [aiLoading, setAiLoading] = useState(false)
-  const [showToneMenu, setShowToneMenu] = useState(false)
   const [localSize, setLocalSize] = useState('')
   const [updateCounter, setUpdateCounter] = useState(0)
+  const [isSaving, setIsSaving] = useState(false)
+  const [status, setStatus] = useState('draft')
 
   const editor = useEditor({
     extensions: [
@@ -307,7 +245,6 @@ export default function ArticleEditor() {
       CharacterCount,
       CustomImage,
       ImageDropPaste,
-      GrammarChecker,
       CustomCommands.configure({
         suggestion: {
           items: getSuggestionItems,
@@ -354,20 +291,89 @@ export default function ArticleEditor() {
     }
   })
 
-  const handleAIAction = async (actionType) => {
-    const { from, to } = editor.state.selection
-    const selectedText = editor.state.doc.textBetween(from, to)
-    if (!selectedText) return
-    
-    setAiLoading(true)
-    setShowToneMenu(false)
+  useEffect(() => {
+    if (id && editor) {
+      fetch(`http://localhost:3000/cms/v1/articles/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          setHeadline(data.headline)
+          setStatus(data.status)
+          editor.commands.setContent(data.body)
+        })
+        .catch(err => console.error('Failed to fetch article', err))
+    }
+  }, [id, editor])
 
-    // Simulate AI delay
-    setTimeout(() => {
-      const result = `[AI ${actionType}]: ${selectedText}`
-      editor.chain().focus().insertContentAt({ from, to }, result).run()
-      setAiLoading(false)
-    }, 1000)
+  const handlePublish = async () => {
+    if (!headline) return alert("Headline is required")
+    setIsSaving(true)
+    
+    const articleData = {
+      headline,
+      body: editor.getHTML(),
+      status: 'published'
+    }
+
+    try {
+      const url = id 
+        ? `http://localhost:3000/cms/v1/articles/${id}` 
+        : 'http://localhost:3000/cms/v1/articles'
+      
+      const method = id ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(articleData)
+      })
+
+      if (res.ok) {
+        navigate('/articles')
+      } else {
+        alert("Failed to save article")
+      }
+    } catch (err) {
+      alert("Error saving article")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleSaveDraft = async () => {
+    setIsSaving(true)
+    const articleData = {
+      headline: headline || 'Untitled',
+      body: editor.getHTML(),
+      status: 'draft'
+    }
+
+    try {
+      const url = id 
+        ? `http://localhost:3000/cms/v1/articles/${id}` 
+        : 'http://localhost:3000/cms/v1/articles'
+      
+      const method = id ? 'PUT' : 'POST'
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(articleData)
+      })
+
+      if (res.ok) {
+        const data = await res.json()
+        if (!id) {
+           navigate(`/articles/${data.id}`, { replace: true })
+        }
+        alert("Draft saved successfully")
+      } else {
+        alert("Failed to save draft")
+      }
+    } catch (err) {
+      alert("Error saving draft")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   if (!editor) return null
@@ -393,16 +399,28 @@ export default function ArticleEditor() {
               <ArrowLeft size={24} />
            </button>
            <div>
-              <h2 className="text-xl font-bold text-gray-900 leading-tight">Create New Article</h2>
-              <p className="text-sm text-gray-500 font-medium">Drafting... Last saved just now</p>
+              <h2 className="text-xl font-bold text-gray-900 leading-tight">
+                {id ? 'Edit Article' : 'Create New Article'}
+              </h2>
+              <p className="text-sm text-gray-500 font-medium">
+                {status === 'published' ? 'Published' : 'Drafting...'} 
+              </p>
            </div>
         </div>
         <div className="flex items-center gap-3">
-           <button className="flex items-center px-4 py-2 text-gray-700 font-semibold bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all shadow-sm">
-              <Eye className="mr-2 w-4 h-4" /> Preview
+           <button 
+             onClick={handleSaveDraft}
+             disabled={isSaving}
+             className="flex items-center px-4 py-2 text-gray-700 font-semibold bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50"
+           >
+              <Save className="mr-2 w-4 h-4" /> {isSaving ? 'Saving...' : 'Save Draft'}
            </button>
-           <button className="flex items-center px-5 py-2 text-white font-bold bg-[#E94560] rounded-lg hover:bg-[#d63d56] transition-all shadow-lg shadow-[#E94560]/20">
-              <span className="mr-2">Publish Now</span> <Send className="w-4 h-4" />
+           <button 
+             onClick={handlePublish}
+             disabled={isSaving}
+             className="flex items-center px-5 py-2 text-white font-bold bg-[#E94560] rounded-lg hover:bg-[#d63d56] transition-all shadow-lg shadow-[#E94560]/20 disabled:opacity-50"
+           >
+              <span className="mr-2">{isSaving ? 'Sending...' : 'Publish Now'}</span> <Send className="w-4 h-4" />
            </button>
         </div>
       </div>
@@ -494,21 +512,6 @@ export default function ArticleEditor() {
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm min-h-[600px] p-10 relative">
         {editor && <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }} className="flex bg-white shadow-xl border border-gray-100 rounded-lg relative z-50">
-          <div className="flex border-r border-gray-100 bg-white relative">
-             <button 
-               onClick={() => setShowToneMenu(!showToneMenu)} 
-               className="px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2 font-semibold text-[#E94560] transition-colors"
-             >
-               <Sparkles className="w-4 h-4" /> Rewrite Tone {showToneMenu ? <X className="w-3 h-3 ml-1"/> : <Wand2 className="w-3 h-3 ml-1"/>}
-             </button>
-             {showToneMenu && (
-               <div className="absolute top-full left-0 mt-2 bg-white border border-gray-100 shadow-2xl rounded-xl py-2 min-w-[160px] z-[100] animate-in slide-in-from-top-2 duration-200">
-                  {['Professional', 'Casual', 'Persuasive', 'Concise'].map(tone => (
-                    <button key={tone} onClick={() => handleAIAction(tone)} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 text-gray-700 transition-colors">{tone}</button>
-                  ))}
-               </div>
-             )}
-          </div>
           <div className="flex p-1 gap-0.5">
             <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive('bold')}><Bold size={16}/></ToolbarButton>
             <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive('italic')}><Italic size={16}/></ToolbarButton>
@@ -528,17 +531,7 @@ export default function ArticleEditor() {
         <span>{editor.storage.characterCount.characters()} characters</span>
       </div>
 
-      {aiLoading && (
-        <div className="fixed inset-0 bg-black/5 flex items-center justify-center z-[100] backdrop-blur-[1px]">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl border border-gray-100 flex items-center gap-4 animate-in zoom-in duration-300">
-            <div className="w-10 h-10 border-4 border-[#E94560] border-t-transparent rounded-full animate-spin"></div>
-            <div>
-              <p className="font-bold text-gray-900">AI is thinking...</p>
-              <p className="text-sm text-gray-500">Refining your content to perfection</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* AI loading removed */}
     </div>
   )
 }

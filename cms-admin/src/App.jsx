@@ -26,6 +26,7 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="articles" element={<Articles />} />
           <Route path="articles/new" element={<ArticleEditor />} />
+          <Route path="articles/:id" element={<ArticleEditor />} />
           <Route path="media" element={<Media />} />
           <Route path="taxonomy" element={<Taxonomy />} />
           <Route path="users" element={<Users />} />
