@@ -1,6 +1,108 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, GripVertical, Edit2, Trash2, ChevronDown, ChevronRight, ExternalLink, Move } from 'lucide-react'
+import { Plus, GripVertical, Edit2, Trash2, ExternalLink, Move } from 'lucide-react'
+import {
+  DndContext, 
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
+// --- SORTABLE ITEM COMPONENT ---
+function SortableMenuItem({ item, level = 0, openModal, handleDelete, updateDisplayOrder }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: item.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 1 : 0,
+    opacity: isDragging ? 0.5 : 1
+  }
+
+  return (
+    <div key={item.id} className="mb-2 relative" ref={setNodeRef} style={style}>
+      <div 
+        className={`flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all group ${level > 0 ? 'ml-8' : ''}`}
+      >
+        <div className="flex items-center gap-4">
+          {level > 0 && (
+            <div className="absolute -left-4 top-1/2 w-4 h-px bg-gray-200" />
+          )}
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1">
+            <GripVertical className="text-gray-300 group-hover:text-gray-400" size={18} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-gray-900 uppercase tracking-tight italic">{item.label}</span>
+              <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-mono uppercase font-bold">{item.type}</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-gray-400 font-mono">
+              <ExternalLink size={10} />
+              {item.href}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={() => openModal(null, item.id, item.label)}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <Plus size={12} />
+            Sub-menu
+          </button>
+          <button 
+            onClick={() => openModal(item)}
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="Edit"
+          >
+            <Edit2 size={16} />
+          </button>
+          <button 
+            onClick={() => handleDelete(item.id)}
+            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            title="Delete"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
+      </div>
+      {item.children?.length > 0 && (
+        <div className="mt-2">
+          <SortableContext items={item.children.map(c => c.id)} strategy={verticalListSortingStrategy}>
+            {item.children.map(child => (
+              <SortableMenuItem 
+                key={child.id} 
+                item={child} 
+                level={level + 1} 
+                openModal={openModal} 
+                handleDelete={handleDelete}
+                updateDisplayOrder={updateDisplayOrder}
+              />
+            ))}
+          </SortableContext>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// --- MAIN PAGE COMPONENT ---
 export default function Navigation() {
   const [menuItems, setMenuItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -12,8 +114,16 @@ export default function Navigation() {
     href: '',
     type: 'link',
     parentId: null,
+    parentLabel: null,
     displayOrder: 0
   })
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   useEffect(() => {
     fetchMenuItems()
@@ -28,6 +138,66 @@ export default function Navigation() {
     } catch (err) {
       console.error('Failed to fetch menu items', err)
       setLoading(false)
+    }
+  }
+
+  const handleDragEnd = async (event) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    // Find the list that contains the dragged item
+    const findAndMove = (list) => {
+      const oldIndex = list.findIndex((item) => item.id === active.id)
+      const newIndex = list.findIndex((item) => item.id === over.id)
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newList = arrayMove(list, oldIndex, newIndex)
+        // Update displayOrder for ALL items in this level
+        const updatedItems = newList.map((item, index) => ({
+          ...item,
+          displayOrder: index
+        }))
+        return { newList: updatedItems, wasFound: true }
+      }
+
+      // If not found in this level, check children
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].children) {
+          const { newList: newChildren, wasFound } = findAndMove(list[i].children)
+          if (wasFound) {
+            const newList = [...list]
+            newList[i] = { ...newList[i], children: newChildren }
+            return { newList, wasFound: true }
+          }
+        }
+      }
+
+      return { newList: list, wasFound: false }
+    }
+
+    const { newList, wasFound } = findAndMove(menuItems)
+    if (wasFound) {
+      setMenuItems(newList)
+      
+      // Sync to backend
+      const flatten = (items) => {
+        let flat = []
+        items.forEach(item => {
+          flat.push({ id: item.id, displayOrder: item.displayOrder })
+          if (item.children) flat = [...flat, ...flatten(item.children)]
+        })
+        return flat
+      }
+      
+      try {
+        await fetch('http://localhost:3000/cms/v1/navigation/reorder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: flatten(newList) })
+        })
+      } catch (err) {
+        console.error('Failed to sync order', err)
+      }
     }
   }
 
@@ -46,7 +216,7 @@ export default function Navigation() {
       })
       setIsModalOpen(false)
       setEditingItem(null)
-      setFormData({ label: '', href: '', type: 'link', parentId: null, displayOrder: 0 })
+      setFormData({ label: '', href: '', type: 'link', parentId: null, parentLabel: null, displayOrder: 0 })
       fetchMenuItems()
     } catch (err) {
       console.error('Failed to save menu item', err)
@@ -79,7 +249,7 @@ export default function Navigation() {
     setFormData({ ...formData, label, href: newHref })
   }
 
-  const openModal = (item = null, parentId = null) => {
+  const openModal = (item = null, parentId = null, parentLabel = null) => {
     setIsManualHref(item ? true : false)
     if (item) {
       setEditingItem(item)
@@ -88,64 +258,22 @@ export default function Navigation() {
         href: item.href,
         type: item.type,
         parentId: item.parentId,
+        parentLabel: null,
         displayOrder: item.displayOrder
       })
     } else {
       setEditingItem(null)
-      setFormData({ label: '', href: '', type: 'link', parentId: parentId, displayOrder: menuItems.length })
+      setFormData({ 
+        label: '', 
+        href: '', 
+        type: 'link', 
+        parentId: parentId, 
+        parentLabel: parentLabel,
+        displayOrder: menuItems.length 
+      })
     }
     setIsModalOpen(true)
   }
-
-  const renderMenuItem = (item, level = 0) => (
-    <div key={item.id} className="mb-2">
-      <div 
-        className={`flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl hover:border-gray-300 transition-all group ${level > 0 ? 'ml-8' : ''}`}
-      >
-        <div className="flex items-center gap-4">
-          <GripVertical className="text-gray-300 cursor-grab group-hover:text-gray-400" size={18} />
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-gray-900 uppercase tracking-tight italic">{item.label}</span>
-              <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full font-mono uppercase font-bold">{item.type}</span>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-gray-400 font-mono">
-              <ExternalLink size={10} />
-              {item.href}
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button 
-            onClick={() => openModal(null, item.id)}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Add Submenu"
-          >
-            <Plus size={16} />
-          </button>
-          <button 
-            onClick={() => openModal(item)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="Edit"
-          >
-            <Edit2 size={16} />
-          </button>
-          <button 
-            onClick={() => handleDelete(item.id)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <Trash2 size={16} />
-          </button>
-        </div>
-      </div>
-      {item.children?.length > 0 && (
-        <div className="mt-2">
-          {item.children.map(child => renderMenuItem(child, level + 1))}
-        </div>
-      )}
-    </div>
-  )
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
@@ -179,20 +307,41 @@ export default function Navigation() {
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {menuItems.map(item => renderMenuItem(item))}
-        </div>
+        <DndContext 
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={menuItems.map(item => item.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-4">
+              {menuItems.map(item => (
+                <SortableMenuItem 
+                  key={item.id} 
+                  item={item} 
+                  openModal={openModal} 
+                  handleDelete={handleDelete}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
 
-      {/* Modal */}
+      {/* Modal remains the same */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
           <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-300">
             <div className="p-8 border-b border-gray-100">
-              <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter italic">
-                {editingItem ? 'Edit Menu Item' : 'New Menu Item'}
+              <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter italic leading-none">
+                {editingItem ? 'Edit Item' : formData.parentId ? `Add Sub-menu` : 'New Menu Item'}
               </h2>
+              {formData.parentLabel && !editingItem && (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Parent:</span>
+                  <span className="text-[10px] font-black text-[#E94560] uppercase tracking-widest">{formData.parentLabel}</span>
+                </div>
+              )}
             </div>
             <form onSubmit={handleSave} className="p-8 space-y-6">
               <div className="space-y-2">

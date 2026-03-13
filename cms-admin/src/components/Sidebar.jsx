@@ -8,7 +8,8 @@ import {
   Users, 
   Settings, 
   LogOut,
-  Menu
+  Menu,
+  Map
 } from 'lucide-react'
 
 const navItems = [
@@ -17,6 +18,7 @@ const navItems = [
   { label: 'Media Library', icon: ImageIcon, path: '/media' },
   { label: 'Categories & Tags', icon: FolderTree, path: '/taxonomy' },
   { label: 'Header Navigation', icon: Menu, path: '/navigation' },
+  { label: 'Site Architecture', icon: Map, path: '/architecture' },
   { label: 'Users', icon: Users, path: '/users' },
   { label: 'Settings', icon: Settings, path: '/settings' },
 ]

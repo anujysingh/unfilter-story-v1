@@ -427,6 +427,23 @@ fastify.delete('/cms/v1/navigation/:id', async (request, reply) => {
   }
 })
 
+fastify.post('/cms/v1/navigation/reorder', async (request, reply) => {
+  try {
+    const { items } = request.body // Array of { id, displayOrder }
+    const updates = items.map(item => 
+      prisma.navigation.update({
+        where: { id: item.id },
+        data: { displayOrder: item.displayOrder }
+      })
+    )
+    await prisma.$transaction(updates)
+    return { success: true }
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Failed to reorder navigation items' })
+  }
+})
+
 // Start server
 const start = async () => {
   try {

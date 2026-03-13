@@ -62,7 +62,7 @@ The **Unfilter Story CMS Admin** is a professional-grade editorial environment d
     *   **Smart Slug Engine**: Automated real-time URL generation (e.g., "Technology" -> `/category/technology`) with **Manual Override Detection** to preserve custom paths.
 *   **Format & Types**:
     *   **Versatile Item Types**: Support for standard **Links**, **Dropdowns**, and **Category Groups**.
-    *   **Custom Ordering**: Drag-handle iconography and numeric priority for precise display control.
+    *   **Custom Ordering**: High-fidelity **Drag-and-Drop Engine** using `@dnd-kit` for tactile, real-time reordering of main items and sub-menus with automated backend priority syncing.
 *   **Visual Management**:
     *   **Hierarchical Registry**: An indented tree view for nested sub-menus with specialized styling for child items.
 
@@ -100,6 +100,14 @@ The **Unfilter Story CMS Admin** is a professional-grade editorial environment d
     *   **Site Identity**: Centralized management of Site Title and SEO Meta Description.
 *   **Feature Flags**:
     *   **Newsletter Optimization**: One-click toggle for enabling/disabling subscription widgets on the public site.
+
+### 3.9 Site Architecture & Routing Observer (New)
+*   **Visual Site Mapping**:
+    *   **Architecture Flow**: A structural overview showing how **Core Pages**, **Category Feeds**, and **Article Slugs** are interconnected.
+    *   **Routing Discovery**: Automated listing of all live URLs currently active on the public website.
+*   **Content Model Visualization**:
+    *   **Source Mapping**: Visual indicators showing which categories drive which specific page sections.
+    *   **Path Validation**: Real-time status checks for permalinks to ensure no routing conflicts.
 
 ---
 
