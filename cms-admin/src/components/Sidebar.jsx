@@ -31,7 +31,7 @@ export default function Sidebar() {
           <div className="w-10 h-10 bg-[var(--cms-sidebar-active-bg)] rounded-xl flex items-center justify-center text-[var(--cms-accent)] font-black text-xl italic shadow-lg shadow-black/20">
             U
           </div>
-          <span className="font-black text-xl text-white uppercase tracking-tighter italic">Unfilter</span>
+          <span className="font-extrabold text-xl text-white tracking-tighter">Unfilter</span>
         </div>
       </div>
       
@@ -61,7 +61,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-8 border-t border-white/10">
-        <button className="flex items-center w-full px-4 py-3 text-sm font-black text-[var(--cms-sidebar-text)] hover:text-[var(--cms-sidebar-active-bg)] transition-all group uppercase tracking-widest italic">
+        <button className="flex items-center w-full px-4 py-3 text-sm font-extrabold text-[var(--cms-sidebar-text)] hover:text-[var(--cms-sidebar-active-bg)] transition-all group tracking-widest">
           <LogOut className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
           Log Out
         </button>

@@ -118,15 +118,15 @@ export default function Taxonomy() {
     <div className="space-y-6 flex flex-col h-full relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-8">
         <div>
-          <h1 className="text-[56px] font-extrabold text-[var(--cms-accent)] uppercase tracking-tighter italic leading-[1.1] mb-2">Taxonomy</h1>
-          <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] uppercase tracking-[0.2em] mt-2 px-1">Organize your content structure and tags</p>
+          <h1 className="text-[56px] font-extrabold text-[var(--cms-accent)] tracking-tighter leading-[1.1] mb-2">Taxonomy</h1>
+          <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] tracking-tight mt-2 px-1">Organize your content structure and tags</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={() => openTagModal()} className="flex items-center px-6 py-3 bg-white border-2 border-[var(--cms-accent-light)] text-[var(--cms-accent)] text-sm font-black rounded-xl hover:bg-[var(--cms-accent-light)] transition-all uppercase tracking-widest italic">
+          <button onClick={() => openTagModal()} className="flex items-center px-6 py-3 bg-white border-2 border-[var(--cms-accent-light)] text-[var(--cms-accent)] text-sm font-extrabold rounded-xl hover:bg-[var(--cms-accent-light)] transition-all tracking-widest">
             <Plus className="w-4 h-4 mr-2" />
             Add Tag
           </button>
-          <button onClick={() => openCatModal()} className="flex items-center px-6 py-3 bg-[var(--cms-accent)] text-white text-sm font-black rounded-xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all uppercase tracking-widest italic">
+          <button onClick={() => openCatModal()} className="flex items-center px-6 py-3 bg-[var(--cms-accent)] text-white text-sm font-extrabold rounded-xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all tracking-widest">
             <Plus className="w-4 h-4 mr-2" />
             Add Category
           </button>
@@ -137,7 +137,7 @@ export default function Taxonomy() {
         {/* Categories Panel */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
-            <h3 className="font-black text-[var(--cms-accent)] uppercase tracking-tighter italic">Categories</h3>
+            <h3 className="font-extrabold text-[var(--cms-accent)] tracking-tight text-xl">Categories</h3>
             <span className="text-[10px] font-black bg-[var(--cms-accent-light)] text-[var(--cms-accent)] px-3 py-1 rounded-full">{categories.length} GROUPINGS</span>
           </div>
           <div className="p-0 flex-1 overflow-y-auto">
@@ -168,7 +168,7 @@ export default function Taxonomy() {
         {/* Tags Panel */}
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
-            <h3 className="font-black text-[var(--cms-accent)] uppercase tracking-tighter italic">Tags</h3>
+            <h3 className="font-extrabold text-[var(--cms-accent)] tracking-tighter">Tags</h3>
             <span className="text-[10px] font-black bg-[var(--cms-accent-light)] text-[var(--cms-accent)] px-3 py-1 rounded-full">{tags.length} LABELS</span>
           </div>
           <div className="p-6 flex-1">
@@ -179,7 +179,7 @@ export default function Taxonomy() {
              ) : (
                 <div className="flex flex-wrap gap-3">
                   {tags.map(tag => (
-                    <div key={tag.id} className="group relative flex items-center px-4 py-2 bg-[var(--cms-accent-light)] text-[var(--cms-accent)] rounded-xl text-xs font-black uppercase tracking-widest italic border border-transparent hover:border-[var(--cms-accent)]/30 pr-10 overflow-hidden transition-all shadow-sm">
+                    <div key={tag.id} className="group relative flex items-center px-4 py-2 bg-[var(--cms-accent-light)] text-[var(--cms-accent)] rounded-xl text-xs font-extrabold shadow-lg shadow-[var(--cms-accent)]/20 active:scale-95 transition-all tracking-widest border border-transparent hover:border-[var(--cms-accent)]/30 pr-10 overflow-hidden transition-all shadow-sm">
                       <span>#{tag.name}</span>
                       <div className="absolute right-1 flex bg-white/50 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => openTagModal(tag)} className="p-1 hover:text-[var(--cms-accent)]"><Edit2 className="w-3 h-3" /></button>
@@ -215,8 +215,8 @@ export default function Taxonomy() {
                   <textarea value={description} onChange={e => setDescription(e.target.value)} rows="3" className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-[var(--cms-accent-light)] transition-all" placeholder="Optional description..."></textarea>
                </div>
                 <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setCatModalOpen(false)} className="px-5 py-3 text-xs font-black text-[var(--cms-text-secondary)] uppercase tracking-widest italic hover:text-[var(--cms-text-primary)]">Cancel</button>
-                  <button type="submit" className="px-6 py-3 text-xs font-black text-white bg-[var(--cms-accent)] rounded-xl uppercase tracking-widest italic shadow-lg shadow-[var(--cms-accent)]/20 active:scale-95">{editId ? 'Update Group' : 'Save Category'}</button>
+                  <button type="button" onClick={() => setCatModalOpen(false)} className="px-5 py-3 text-xs font-extrabold text-[var(--cms-text-secondary)] tracking-widest hover:text-[var(--cms-text-primary)]">Cancel</button>
+                  <button type="submit" className="px-6 py-3 text-xs font-extrabold text-white bg-[var(--cms-accent)] rounded-xl tracking-widest shadow-lg shadow-[var(--cms-accent)]/20 active:scale-95">{editId ? 'Update Group' : 'Save Category'}</button>
                 </div>
             </form>
           </div>
@@ -241,8 +241,8 @@ export default function Taxonomy() {
                   <input value={slug} onChange={e => setSlug(e.target.value)} type="text" className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-[var(--cms-accent-light)] transition-all" placeholder="e.g. ai" />
                </div>
                 <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setTagModalOpen(false)} className="px-5 py-3 text-xs font-black text-[var(--cms-text-secondary)] uppercase tracking-widest italic hover:text-[var(--cms-text-primary)]">Cancel</button>
-                  <button type="submit" className="px-6 py-3 text-xs font-black text-white bg-[var(--cms-accent)] rounded-xl uppercase tracking-widest italic shadow-lg shadow-[var(--cms-accent)]/20 active:scale-95">{editId ? 'Update Tag' : 'Save Tag'}</button>
+                  <button type="button" onClick={() => setTagModalOpen(false)} className="px-5 py-3 text-xs font-extrabold text-[var(--cms-text-secondary)] tracking-widest hover:text-[var(--cms-text-primary)]">Cancel</button>
+                  <button type="submit" className="px-6 py-3 text-xs font-extrabold text-white bg-[var(--cms-accent)] rounded-xl tracking-widest shadow-lg shadow-[var(--cms-accent)]/20 active:scale-95">{editId ? 'Update Tag' : 'Save Tag'}</button>
                 </div>
             </form>
           </div>

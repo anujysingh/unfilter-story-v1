@@ -117,13 +117,13 @@ export default function Media() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-[56px] font-extrabold tracking-tighter text-[var(--cms-accent)] uppercase italic leading-[1.1] mb-2">Media Library</h1>
-          <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] uppercase tracking-[0.2em] leading-[1.5] mt-2 px-1">Manage assets and editorial resources</p>
+          <h1 className="text-[56px] font-extrabold tracking-tighter text-[var(--cms-accent)] leading-[1.1] mb-2">Media Library</h1>
+          <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] tracking-tight leading-[1.5] mt-2 px-1">Manage assets and editorial resources</p>
         </div>
         
         <label className={`
-          relative flex items-center gap-3 px-8 py-4 bg-[var(--cms-accent)] text-white rounded-2xl font-black text-sm 
-          shadow-[0_8px_30px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all cursor-pointer uppercase tracking-widest italic
+          relative flex items-center gap-3 px-8 py-4 bg-[var(--cms-accent)] text-white rounded-2xl font-extrabold text-sm 
+          shadow-[0_8px_30px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all cursor-pointer tracking-widest
           ${isUploading ? 'opacity-50 cursor-wait' : ''}
         `}>
           <Upload size={18} className={isUploading ? 'animate-bounce' : ''} />
@@ -190,7 +190,7 @@ export default function Media() {
           <div className="w-24 h-24 rounded-3xl bg-gray-50 flex items-center justify-center text-gray-300 mb-8 border-2 border-dashed border-gray-100 group">
              <ImageIcon size={48} className="transition-transform group-hover:scale-110 duration-500" />
           </div>
-          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter mb-4 italic">No Assets Found</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-4">No Assets Found</h2>
           <p className="text-gray-400 font-bold text-sm max-w-xs mb-10 leading-relaxed uppercase tracking-widest">Your media library is currently empty. Start by uploading images or publishing articles. Max 5MB (PNG/JPEG) allowed.</p>
           <label className="px-10 py-5 bg-gray-900 text-white rounded-2xl font-black text-sm shadow-2xl hover:scale-105 active:scale-95 transition-all cursor-pointer uppercase tracking-widest italic">
             Select Files
@@ -207,11 +207,11 @@ export default function Media() {
               <div className="w-20 h-20 rounded-3xl bg-red-50 flex items-center justify-center text-red-500 mx-auto mb-6">
                 <Filter size={32} />
               </div>
-              <h3 className="text-3xl font-black text-gray-900 uppercase tracking-tighter mb-4 italic">{errorDialog.title}</h3>
+              <h3 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-4">{errorDialog.title}</h3>
               <p className="text-gray-500 font-bold mb-10 uppercase tracking-widest text-xs leading-loose">{errorDialog.message}</p>
               <button 
                 onClick={() => setErrorDialog({ show: false, title: '', message: '' })}
-                className="w-full py-5 bg-gray-900 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl active:scale-95 transition-all italic"
+                className="w-full py-5 bg-gray-900 text-white rounded-2xl font-extrabold text-sm tracking-widest shadow-xl active:scale-95 transition-all"
               >
                 Understood
               </button>

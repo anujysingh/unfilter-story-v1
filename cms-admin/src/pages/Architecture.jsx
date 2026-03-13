@@ -41,7 +41,7 @@ export default function Architecture() {
       <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-[var(--cms-accent)] text-white">
         <div className="flex items-center gap-3">
           {icon}
-          <h3 className="font-black uppercase tracking-tighter italic">{title}</h3>
+          <h3 className="font-extrabold tracking-tight">{title}</h3>
         </div>
         <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black">{items.length} PATHS</span>
       </div>
@@ -98,8 +98,8 @@ export default function Architecture() {
              </div>
              <span className="text-xs font-black text-[var(--cms-accent)] uppercase tracking-[0.2em]">Discovery Engine</span>
           </div>
-          <h1 className="text-[56px] font-extrabold text-[var(--cms-accent)] uppercase tracking-tighter italic leading-[1.1] mb-2">Site Architecture</h1>
-          <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] uppercase tracking-[0.2em] leading-[1.5] mt-2 px-1">Mapping the structural flow of Unfilter Story</p>
+          <h1 className="text-[56px] font-extrabold text-[var(--cms-accent)] tracking-tighter leading-[1.1] mb-2">Site Architecture</h1>
+          <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] tracking-tight leading-[1.5] mt-2 px-1">Mapping the structural flow of Unfilter Story</p>
         </div>
         <button 
           onClick={fetchArchitecture}
@@ -127,7 +127,7 @@ export default function Architecture() {
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-8">
             <Share2 className="text-[var(--cms-accent-light)]" />
-            <h2 className="text-2xl font-black uppercase tracking-tighter italic">Global Navigation Bridge</h2>
+            <h2 className="text-2xl font-extrabold tracking-tight">Global Navigation Bridge</h2>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -166,7 +166,7 @@ export default function Architecture() {
           <Globe size={24} />
         </div>
         <div>
-          <h4 className="font-black text-emerald-900 uppercase tracking-tighter italic">Frontend Live Pulse</h4>
+          <h4 className="font-extrabold text-emerald-900 tracking-tight">Frontend Live Pulse</h4>
           <p className="text-emerald-700/70 text-[10px] font-bold uppercase tracking-widest mt-0.5">
             All dynamic routes are live-indexed from the public portal at http://localhost:4321
           </p>

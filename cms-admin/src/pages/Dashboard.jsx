@@ -11,8 +11,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="border-b border-gray-100 pb-10">
-        <h1 className="text-[56px] font-extrabold text-[var(--cms-accent)] uppercase tracking-tighter italic leading-[1.1] mb-4">Dashboard</h1>
-        <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] uppercase tracking-[0.2em] leading-[1.5]">Performance overview and site metrics</p>
+        <h1 className="text-[56px] font-extrabold text-[var(--cms-accent)] tracking-tighter leading-[1.1] mb-4">Dashboard</h1>
+        <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] tracking-tight leading-[1.5]">Performance overview and site metrics</p>
       </div>
       
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
@@ -42,7 +42,7 @@ export default function Dashboard() {
       </div>
       
       <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-8 mt-8">
-        <h3 className="text-xl font-black text-[var(--cms-text-primary)] uppercase tracking-tighter italic mb-6">Recent Activity</h3>
+        <h3 className="text-xl font-extrabold text-[var(--cms-text-primary)] tracking-tight mb-6">Recent Activity</h3>
         <div className="text-[10px] text-[var(--cms-text-secondary)] font-black uppercase tracking-widest py-16 text-center border-2 border-dashed border-gray-50 rounded-3xl">
           Analyzing latest data streams...
         </div>

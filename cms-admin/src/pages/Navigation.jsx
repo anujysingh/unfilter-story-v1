@@ -49,7 +49,7 @@ function SortableMenuItem({ item, level = 0, openModal, handleDelete, updateDisp
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[var(--cms-text-primary)] uppercase tracking-tight italic">{item.label}</span>
+              <span className="font-bold text-[var(--cms-text-primary)] tracking-tight">{item.label}</span>
               <span className="text-[10px] px-2 py-0.5 bg-[var(--cms-accent-light)] text-[var(--cms-accent)] rounded-lg font-mono uppercase font-bold">{item.type}</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-[var(--cms-text-secondary)] font-mono">
@@ -279,12 +279,12 @@ export default function Navigation() {
     <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in duration-700">
       <div className="flex justify-between items-end border-b border-gray-100 pb-8">
         <div>
-          <h1 className="text-[56px] font-extrabold text-[var(--cms-accent)] uppercase tracking-tighter italic leading-[1.1] mb-2">Navigation</h1>
-          <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] uppercase tracking-[0.2em] leading-[1.5] mt-2">Manage website headers and sub-menus</p>
+          <h1 className="text-[56px] font-extrabold text-[var(--cms-accent)] tracking-tighter leading-[1.1] mb-2">Navigation</h1>
+          <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] tracking-tight leading-[1.5] mt-2">Manage website headers and sub-menus</p>
         </div>
         <button 
           onClick={() => openModal()}
-          className="px-6 py-3 bg-[var(--cms-accent)] text-white font-black text-sm rounded-xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all flex items-center gap-2 uppercase tracking-widest italic"
+          className="px-6 py-3 bg-[var(--cms-accent)] text-white font-extrabold text-sm rounded-xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest"
         >
           <Plus size={18} />
           Add Menu Item
@@ -301,7 +301,7 @@ export default function Navigation() {
           <div className="w-20 h-20 bg-white rounded-2xl shadow-xl flex items-center justify-center text-gray-200">
             <Move size={40} />
           </div>
-          <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tighter italic">No Navigation Items</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">No Navigation Items</h2>
           <p className="text-gray-400 font-bold text-sm max-w-xs leading-relaxed uppercase tracking-widest">
             Your website header is currently empty. Start by adding links or dropdowns.
           </p>
@@ -333,7 +333,7 @@ export default function Navigation() {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
           <div className="relative bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-300">
             <div className="p-8 border-b border-gray-50">
-              <h2 className="text-2xl font-black text-[var(--cms-text-primary)] uppercase tracking-tighter italic leading-none">
+              <h2 className="text-2xl font-extrabold text-[var(--cms-text-primary)] tracking-tight leading-none">
                 {editingItem ? 'Edit Item' : formData.parentId ? `Add Sub-menu` : 'New Menu Item'}
               </h2>
               {formData.parentLabel && !editingItem && (
@@ -399,13 +399,13 @@ export default function Navigation() {
                 <button 
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 bg-gray-50 text-[var(--cms-text-secondary)] font-black text-xs rounded-2xl hover:bg-gray-100 transition-all uppercase tracking-widest italic"
+                  className="flex-1 py-4 bg-gray-50 text-[var(--cms-text-secondary)] font-extrabold text-xs rounded-2xl hover:bg-gray-100 transition-all tracking-widest"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 py-4 bg-[var(--cms-accent)] text-white font-black text-xs rounded-2xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all uppercase tracking-widest italic"
+                  className="flex-1 py-4 bg-[var(--cms-accent)] text-white font-extrabold text-xs rounded-2xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all tracking-widest"
                 >
                   {editingItem ? 'Update Item' : 'Create Item'}
                 </button>

@@ -900,7 +900,7 @@ export default function ArticleEditor() {
              </button>
              <div className="flex flex-col">
                  <div className="flex items-center gap-4">
-                    <h1 className={`font-extrabold text-[var(--cms-accent)] leading-tight transition-all duration-300 uppercase italic tracking-tighter ${isScrolled ? 'text-2xl max-w-[400px] truncate' : 'text-[56px] py-4'}`}>
+                    <h1 className={`font-extrabold text-[var(--cms-accent)] leading-tight transition-all duration-300 tracking-tighter ${isScrolled ? 'text-2xl max-w-[400px] truncate' : 'text-[56px] py-4'}`}>
                       {isScrolled && headline ? headline : (id ? 'Edit Article' : 'Create New Article')}
                     </h1>
                     {!isScrolled && <div className="h-10 w-px bg-gray-200 ml-4"></div>}

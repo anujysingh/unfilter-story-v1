@@ -229,10 +229,10 @@ export default function Articles() {
       {/* Header Area */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-100 pb-8">
         <div className="pb-4">
-          <h1 className="text-[56px] font-extrabold text-[var(--cms-accent)] uppercase tracking-tighter italic leading-[1.1] mb-2">Articles</h1>
-          <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] uppercase tracking-[0.2em] leading-[1.5]">Manage news stories and editorial calendar</p>
+          <h1 className="text-[56px] font-extrabold text-[var(--cms-accent)] tracking-tighter leading-[1.1] mb-2">Articles</h1>
+          <p className="text-[16px] font-medium text-[var(--cms-text-secondary)] tracking-tight leading-[1.5]">Manage news stories and editorial calendar</p>
         </div>
-        <Link to="/articles/new" className="flex items-center px-6 py-3 bg-[var(--cms-accent)] text-white text-sm font-black rounded-xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all uppercase tracking-widest italic">
+        <Link to="/articles/new" className="flex items-center px-6 py-3 bg-[var(--cms-accent)] text-white text-sm font-extrabold rounded-xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all tracking-widest">
           <Plus className="w-4 h-4 mr-2" />
           Create Article
         </Link>

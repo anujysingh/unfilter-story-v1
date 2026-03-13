@@ -1,7 +1,7 @@
 # Admin Brand Guidelines — Unfilter Story
 # Technical Precision & Functional Density
 
-**Version:** 1.0  
+**Version:** 1.1 (Typography Refined)  
 **Target:** CMS Admin Panel  
 **Design Philosophy:** Maximum efficiency, data density, and clear management hierarchy.
 
@@ -21,10 +21,11 @@ The Admin panel uses a deep neutral palette to reduce eye strain during long edi
 ---
 
 ## 2. Typography & Hierarchy
-*   **Core Font**: Nunito (Sans-serif) for all interface text.
-*   **Primary Headings**: Uppercase, Black (font-weight 900), Italic (e.g., `DASHBOARD`, `ARTICLES`).
-*   **Sub-labels**: Nunito, Uppercase, Tracking-widest, Bold (e.g., `METADATA`, `URL`).
-*   **Technical Text**: Monospace / IBM Plex Mono for slugs and architecture paths.
+*   **Core Font**: `Nunito` (Sans-serif) for all interface text.
+*   **Primary Headings (H1)**: **56px Extra Bold** (font-weight 800), Normal Style (Non-italic), Standard Casing (e.g., `Dashboard`, `Articles`).
+*   **Sub-headings / Descriptions**: **16px Medium**, Tracking-tight, Standard Casing for descriptive text.
+*   **Action Elements**: **Bold / Extra Bold**, Standard Casing for buttons and navigation labels.
+*   **Technical Text**: `Monospace` (e.g., IBM Plex Mono) for slugs and architecture paths.
 
 ---
 
@@ -36,7 +37,7 @@ The Admin panel uses a deep neutral palette to reduce eye strain during long edi
 ### 3.2 Management Tools
 *   **Drag-and-Drop**: Tactile grip handles (`GripVertical`) with a scale-up effect on active grab.
 *   **Tree Structures**: Clear 1px horizontal connectors for nested sub-menus.
-*   **Empty States**: Illustrated with large technical icons and centered uppercase calls-to-action.
+*   **Empty States**: Illustrated with large technical icons and centered calls-to-action in standard casing.
 
 ---
 
