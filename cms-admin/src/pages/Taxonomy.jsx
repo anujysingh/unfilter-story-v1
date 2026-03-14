@@ -138,7 +138,7 @@ export default function Taxonomy() {
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
             <h3 className="font-extrabold text-[var(--cms-accent)] tracking-tight text-xl">Categories</h3>
-            <span className="text-[10px] font-black bg-[var(--cms-accent-light)] text-[var(--cms-accent)] px-3 py-1 rounded-full">{categories.length} GROUPINGS</span>
+            <span className="text-xs font-black bg-[var(--cms-accent-light)] text-[var(--cms-accent)] px-3 py-1 rounded-full">{categories.length} GROUPINGS</span>
           </div>
           <div className="p-0 flex-1 overflow-y-auto">
             {categories.length === 0 && !loading ? (
@@ -169,7 +169,7 @@ export default function Taxonomy() {
         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
           <div className="p-6 border-b border-gray-50 bg-gray-50/50 flex justify-between items-center">
             <h3 className="font-extrabold text-[var(--cms-accent)] tracking-tighter">Tags</h3>
-            <span className="text-[10px] font-black bg-[var(--cms-accent-light)] text-[var(--cms-accent)] px-3 py-1 rounded-full">{tags.length} LABELS</span>
+            <span className="text-xs font-black bg-[var(--cms-accent-light)] text-[var(--cms-accent)] px-3 py-1 rounded-full">{tags.length} LABELS</span>
           </div>
           <div className="p-6 flex-1">
              {tags.length === 0 && !loading ? (
@@ -203,20 +203,20 @@ export default function Taxonomy() {
             </div>
             <form onSubmit={handleSaveCategory} className="p-6 flex-1 overflow-y-auto space-y-4">
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Name</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Name</label>
                   <input required value={name} onChange={e => setName(e.target.value)} type="text" className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-[var(--cms-accent-light)] transition-all" placeholder="e.g. Startups" />
                </div>
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Slug (optional)</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Slug (optional)</label>
                   <input value={slug} onChange={e => setSlug(e.target.value)} type="text" className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-[var(--cms-accent-light)] transition-all" placeholder="e.g. startups" />
                </div>
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Description</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Description</label>
                   <textarea value={description} onChange={e => setDescription(e.target.value)} rows="3" className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-[var(--cms-accent-light)] transition-all" placeholder="Optional description..."></textarea>
                </div>
                 <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setCatModalOpen(false)} className="px-5 py-3 text-xs font-extrabold text-[var(--cms-text-secondary)] tracking-widest hover:text-[var(--cms-text-primary)]">Cancel</button>
-                  <button type="submit" className="px-6 py-3 text-xs font-extrabold text-white bg-[var(--cms-accent)] rounded-xl tracking-widest shadow-lg shadow-[var(--cms-accent)]/20 active:scale-95">{editId ? 'Update Group' : 'Save Category'}</button>
+                  <button type="button" onClick={() => setCatModalOpen(false)} className="px-5 py-3 text-sm font-extrabold text-[var(--cms-text-secondary)] tracking-widest hover:text-[var(--cms-text-primary)]">Cancel</button>
+                  <button type="submit" className="px-6 py-3 text-sm font-extrabold text-white bg-[var(--cms-accent)] rounded-xl tracking-widest shadow-lg shadow-[var(--cms-accent)]/20 active:scale-95">{editId ? 'Update Group' : 'Save Category'}</button>
                 </div>
             </form>
           </div>
@@ -233,16 +233,16 @@ export default function Taxonomy() {
             </div>
             <form onSubmit={handleSaveTag} className="p-6 space-y-4">
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Name</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Name</label>
                   <input required value={name} onChange={e => setName(e.target.value)} type="text" className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-[var(--cms-accent-light)] transition-all" placeholder="e.g. Artificial Intelligence" />
                </div>
                <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Slug (optional)</label>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Slug (optional)</label>
                   <input value={slug} onChange={e => setSlug(e.target.value)} type="text" className="w-full px-4 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:bg-white focus:ring-2 focus:ring-[var(--cms-accent-light)] transition-all" placeholder="e.g. ai" />
                </div>
                 <div className="pt-4 flex justify-end gap-3">
-                  <button type="button" onClick={() => setTagModalOpen(false)} className="px-5 py-3 text-xs font-extrabold text-[var(--cms-text-secondary)] tracking-widest hover:text-[var(--cms-text-primary)]">Cancel</button>
-                  <button type="submit" className="px-6 py-3 text-xs font-extrabold text-white bg-[var(--cms-accent)] rounded-xl tracking-widest shadow-lg shadow-[var(--cms-accent)]/20 active:scale-95">{editId ? 'Update Tag' : 'Save Tag'}</button>
+                  <button type="button" onClick={() => setTagModalOpen(false)} className="px-5 py-3 text-sm font-extrabold text-[var(--cms-text-secondary)] tracking-widest hover:text-[var(--cms-text-primary)]">Cancel</button>
+                  <button type="submit" className="px-6 py-3 text-sm font-extrabold text-white bg-[var(--cms-accent)] rounded-xl tracking-widest shadow-lg shadow-[var(--cms-accent)]/20 active:scale-95">{editId ? 'Update Tag' : 'Save Tag'}</button>
                 </div>
             </form>
           </div>

@@ -43,7 +43,7 @@ export default function Architecture() {
           {icon}
           <h3 className="font-extrabold tracking-tight">{title}</h3>
         </div>
-        <span className="bg-white/20 px-3 py-1 rounded-full text-[10px] font-black">{items.length} PATHS</span>
+        <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-black">{items.length} PATHS</span>
       </div>
       <div className="p-6 space-y-3">
         {items.length === 0 ? (
@@ -53,7 +53,7 @@ export default function Architecture() {
             <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200 group">
               <div className="flex flex-col">
                 <span className="text-xs font-black text-gray-900 uppercase tracking-tight truncate max-w-[200px]">{item.label}</span>
-                <span className="text-[10px] font-mono text-gray-400 font-bold tracking-tighter group-hover:text-gray-900 transition-colors">
+                <span className="text-xs font-mono text-gray-400 font-bold tracking-tighter group-hover:text-gray-900 transition-colors">
                   {item.path}
                 </span>
               </div>
@@ -132,16 +132,16 @@ export default function Architecture() {
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {data.navigation.length === 0 ? (
-              <p className="col-span-full py-8 text-center text-gray-500 font-mono text-xs uppercase font-bold tracking-[0.3em]">No navigation hierarchy defined</p>
+               <p className="col-span-full py-8 text-center text-gray-500 font-mono text-xs uppercase font-bold tracking-[0.2em]">No navigation hierarchy defined</p>
             ) : (
               data.navigation.map((nav, idx) => (
                 <div key={idx} className="bg-white/5 border border-white/10 p-5 rounded-2xl backdrop-blur-md hover:bg-white/10 transition-colors">
-                  <span className="text-[10px] font-black text-[var(--cms-accent-light)] uppercase tracking-widest mb-1 block">{nav.type}</span>
+                  <span className="text-xs font-black text-[var(--cms-accent-light)] uppercase tracking-widest mb-1 block">{nav.type}</span>
                   <div className="flex items-center justify-between">
                     <span className="font-black uppercase tracking-tight italic">{nav.label}</span>
                     <ExternalLink size={12} className="text-gray-500" />
                   </div>
-                  <div className="mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[9px] font-mono text-gray-500 bg-black/20 p-2 rounded-lg border border-white/5 border-dashed">
+                  <div className="mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] font-mono text-gray-500 bg-black/20 p-2 rounded-lg border border-white/5 border-dashed">
                     {nav.href}
                   </div>
                   {nav.children && nav.children.length > 0 && (
@@ -149,7 +149,7 @@ export default function Architecture() {
                         {nav.children.map((child, cIdx) => (
                           <div key={cIdx} className="flex items-center gap-2">
                             <div className="w-1 h-1 bg-[var(--cms-accent-light)] rounded-full"></div>
-                            <span className="text-[10px] uppercase font-bold tracking-tight text-gray-100">{child.label}</span>
+                             <span className="text-xs uppercase font-bold tracking-tight text-gray-100">{child.label}</span>
                           </div>
                         ))}
                      </div>
@@ -167,7 +167,7 @@ export default function Architecture() {
         </div>
         <div>
           <h4 className="font-extrabold text-emerald-900 tracking-tight">Frontend Live Pulse</h4>
-          <p className="text-emerald-700/70 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+          <p className="text-emerald-700/70 text-xs font-bold uppercase tracking-widest mt-0.5">
             All dynamic routes are live-indexed from the public portal at http://localhost:4321
           </p>
         </div>

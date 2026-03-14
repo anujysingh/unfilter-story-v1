@@ -9,7 +9,8 @@ import {
   Settings, 
   LogOut,
   Menu,
-  Map
+  Map,
+  Zap
 } from 'lucide-react'
 
 const navItems = [
@@ -19,6 +20,7 @@ const navItems = [
   { label: 'Categories & Tags', icon: FolderTree, path: '/taxonomy' },
   { label: 'Header Navigation', icon: Menu, path: '/navigation' },
   { label: 'Site Architecture', icon: Map, path: '/architecture' },
+  { label: 'Discovery Engine', icon: Zap, path: '/discovery' },
   { label: 'Users', icon: Users, path: '/users' },
   { label: 'Settings', icon: Settings, path: '/settings' },
 ]

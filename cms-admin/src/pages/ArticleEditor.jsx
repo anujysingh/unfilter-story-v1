@@ -1307,7 +1307,7 @@ export default function ArticleEditor() {
 
                   {/* Indentation */}
                   <div>
-                    <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Text Indent</label>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2 px-1">Text Indent</label>
                     <select 
                       className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:border-[var(--cms-accent)] outline-none bg-gray-50/50"
                       onChange={e => editor.chain().focus().setTextIndent(e.target.value).run()}
@@ -1376,7 +1376,7 @@ export default function ArticleEditor() {
                   </div>
 
                   <div className="border-t border-gray-50 pt-3">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Standard</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Standard</p>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {STANDARD_COLORS.map(c => (
                         <button 
@@ -1394,7 +1394,7 @@ export default function ArticleEditor() {
                   </div>
 
                   <div className="border-t border-gray-50 pt-3 flex items-center justify-between">
-                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Custom</p>
+                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Custom</p>
                      <input 
                        type="color" 
                        className="w-8 h-8 rounded p-0 border-none cursor-pointer overflow-hidden bg-transparent"
@@ -1441,7 +1441,7 @@ export default function ArticleEditor() {
                   </div>
 
                   <div className="border-t border-gray-50 pt-3">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Standard</p>
+                    <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-1">Standard</p>
                     <div className="flex flex-wrap gap-2 mb-3">
                       {STANDARD_COLORS.map(c => (
                         <button 
@@ -1459,7 +1459,7 @@ export default function ArticleEditor() {
                   </div>
 
                   <div className="border-t border-gray-50 pt-3 flex items-center justify-between">
-                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider px-1">Custom</p>
+                     <p className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Custom</p>
                      <input 
                        type="color" 
                        className="w-8 h-8 rounded p-0 border-none cursor-pointer overflow-hidden bg-transparent"
@@ -1491,7 +1491,7 @@ export default function ArticleEditor() {
                 >
                   <LinkIcon size={14} /> From URL
                 </button>
-                  <label className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black hover:bg-gray-50 rounded cursor-pointer text-gray-700 uppercase">
+                  <label className="flex items-center gap-2 px-3 py-1.5 text-xs font-black hover:bg-gray-50 rounded cursor-pointer text-gray-700 uppercase">
                     <UploadCloud size={14} /> Upload File (Max 5MB • PNG/JPEG)
                     <input 
                       type="file" 

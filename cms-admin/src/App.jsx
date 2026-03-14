@@ -10,6 +10,7 @@ import Navigation from './pages/Navigation'
 import Architecture from './pages/Architecture'
 import Users from './pages/Users'
 import Settings from './pages/Settings'
+import Discovery from './pages/Discovery'
 
 function Error404() {
   return (
@@ -35,6 +36,7 @@ function App() {
           <Route path="architecture" element={<Architecture />} />
           <Route path="users" element={<Users />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="discovery" element={<Discovery />} />
           <Route path="*" element={<Error404 />} />
         </Route>
       </Routes>

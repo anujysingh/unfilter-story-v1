@@ -1,9 +1,9 @@
 # PRD — CMS Admin (Editorial Suite)
 # Unfilter Story — News Platform & Editorial Infrastructure
 
-**Version:** 1.7  
-**Date:** March 13, 2026  
-**Status:** Feature Complete — Production Ready  
+**Version:** 2.0  
+**Date:** March 14, 2026  
+**Status:** Feature Complete — Strategic Expansion Active  
 **Owner:** Product Engineering Team
 
 ---
@@ -31,7 +31,7 @@ The **Unfilter Story CMS Admin** is a professional-grade editorial environment d
     *   **Precision Scheduling**: Integrated date picker for setting the official "Publishing Date" in advance.
 *   **Advanced Rich-Text Toolbar**:
     *   **Formatting Layers**: Core formatting (Bold, Italic, Underlined, Strike) combined with Heading/Paragraph levels.
-    *   **Technical Typography Controls**: Specific controls for **Font Family** (Nunito) and **Font Size** adjustments.
+    *   **Technical Typography Controls**: Dual-font architecture using **Inter** (UI/Functional) and **Playfair Display** (Editorial Headlines).
     *   **Visual Alignment**: Comprehensive alignment suite (Left, Center, Right, Justify).
     *   **Advanced Tools**: Integrated **Color Picker** (Brand-aligned colors), Code marks, Quote blocks, and direct **Image/YouTube insertion**.
 *   **Workspace Optimization**: 
@@ -55,7 +55,7 @@ The **Unfilter Story CMS Admin** is a professional-grade editorial environment d
 *   **Search & Indexing**: Real-time search by filename with metadata visibility (Size, Date, Format).
 *   **Direct Management**: Ability to upload or permanently delete assets independently.
 
-### 3.4 Navigation & Menu Management (New)
+### 3.4 Navigation & Menu Management
 *   **Hierarchical Header Control**:
     *   **Unified CRUD Ops**: Full Create, Read, Update, and Delete capabilities for the website's main menu.
     *   **Nested Sub-Menus**: Ability to create multi-level navigation structures (Parents/Children).
@@ -66,7 +66,7 @@ The **Unfilter Story CMS Admin** is a professional-grade editorial environment d
 *   **Visual Management**:
     *   **Hierarchical Registry**: An indented tree view for nested sub-menus with specialized styling for child items.
 
-### 3.5 Taxonomy & Structural Management (New)
+### 3.5 Taxonomy & Structural Management
 *   **Unified Taxonomy Hub**:
     *   **Categories Registry**: List-based management of primary content divisions with automated **Slug Generation** and real-time count badges.
     *   **Visual Tag Index**: Multi-column grid of hashtag-style content markers for quick thematic scanning.
@@ -101,7 +101,7 @@ The **Unfilter Story CMS Admin** is a professional-grade editorial environment d
 *   **Feature Flags**:
     *   **Newsletter Optimization**: One-click toggle for enabling/disabling subscription widgets on the public site.
 
-### 3.9 Site Architecture & Routing Observer (New)
+### 3.9 Site Architecture & Routing Observer
 *   **Visual Site Mapping**:
     *   **Architecture Flow**: A structural overview showing how **Core Pages**, **Category Feeds**, and **Article Slugs** are interconnected.
     *   **Routing Discovery**: Automated listing of all live URLs currently active on the public website.
@@ -109,12 +109,30 @@ The **Unfilter Story CMS Admin** is a professional-grade editorial environment d
     *   **Source Mapping**: Visual indicators showing which categories drive which specific page sections.
     *   **Path Validation**: Real-time status checks for permalinks to ensure no routing conflicts.
 
+### 3.10 Discovery Engine (Signal Intelligence Console)
+*   **Industrial-Grade Research Environment**:
+    *   High-contrast, pixel-perfect UI tailored for high-speed editorial scanning.
+    *   **Signal Navigation Matrix**:
+        *   **News Perimeter Selection**: Multi-select filtering across major news sources (*Entrackr, YourStory, Inc42, etc.*).
+        *   **Industry Signal Matrix**: Multi-select thematic filtering by categories (*Funding, Tech, AI, etc.*) with dynamic extraction.
+*   **Tactical Control Row**:
+    *   **View Mode Matrix**: Iconographic toggles for high-density **Grid** or **List** viewing.
+    *   **Operational Controls**: Integrated **Bookmarking** engine (state-aware) and **Temporal Control** (7d, 15d, 30d, Anytime signals).
+    *   **Density Plane Adjustment**: Configurable signal volume (10, 20, 50 per page).
+*   **Signal Intelligence Bar**:
+    *   **Dynamic Status Core**: Real-time tracking of **Total Signals** across the active research perimeter.
+    *   **Pagination Console**: High-precision navigation with deep tracking (e.g., "PAGE 1 OF 22").
+*   **Deep Signal Sync (Backend Architecture)**:
+    *   **Historical Archive Recovery**: Automated multi-page RSS crawling (Depth 1-10) to bridge year-over-year news gaps.
+    *   **Source Normalization Engine**: Automated publisher identification and author-level routing.
+    *   **Server-Side Intelligence**: High-performance Prisma filtering for sub-second signal acquisition.
+
 ---
 
 ## 4. Technical Requirements
 *   **Frontend**: React 19 & Vite.
-*   **API**: Node.js Fastify (50MB payload limit).
-*   **Database**: SQLite/PostgreSQL via Prisma (Media Table active).
+*   **API**: Node.js Fastify (50MB payload limit) with **RSS Parsing (Depth 10)**.
+*   **Database**: SQLite/PostgreSQL via Prisma with **High-Density Signal Indexing**.
 
 ---
-*Maintained by Antigravity AI — Admin PRD v1.7*
+*Maintained by Antigravity AI — Admin PRD v2.0*

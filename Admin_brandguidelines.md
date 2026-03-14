@@ -1,9 +1,9 @@
 # Admin Brand Guidelines — Unfilter Story
 # Technical Precision & Functional Density
 
-**Version:** 1.1 (Typography Refined)  
+**Version:** 1.2 (Accessibility & Readability Upgrade)  
 **Target:** CMS Admin Panel  
-**Design Philosophy:** Maximum efficiency, data density, and clear management hierarchy.
+**Design Philosophy:** Data-dense management without sacrificing readability.
 
 ---
 
@@ -22,10 +22,13 @@ The Admin panel uses a deep neutral palette to reduce eye strain during long edi
 
 ## 2. Typography & Hierarchy
 *   **Core Font**: `Nunito` (Sans-serif) for all interface text.
-*   **Primary Headings (H1)**: **56px Extra Bold** (font-weight 800), Normal Style (Non-italic), Standard Casing (e.g., `Dashboard`, `Articles`).
-*   **Sub-headings / Descriptions**: **16px Medium**, Tracking-tight, Standard Casing for descriptive text.
-*   **Action Elements**: **Bold / Extra Bold**, Standard Casing for buttons and navigation labels.
-*   **Technical Text**: `Monospace` (e.g., IBM Plex Mono) for slugs and architecture paths.
+*   **Primary Headings (H1)**: **56px Extra Bold** (font-weight 800), Standard Casing.
+*   **Sub-headings**: **20px - 24px Extra Bold**, tracking-tight.
+*   **Body / Descriptive Text**: **16px Medium**, tracking-tight.
+*   **Standard Labels / Inputs**: **14px (sm) Bold / Extrabold**, standard casing.
+*   **Secondary Metadata (Min Size)**: **12px (xs) Black/Bold**, uppercase tracking-widest (e.g., badges, helper labels).
+*   **Accessibility Rule**: Strictly avoid text sizes below **12px** to ensure ergonomic operational control.
+*   **Technical Text**: `Monospace` (e.g., `font-mono`) for slugs, emails, and architecture paths (Min 12px).
 
 ---
 
@@ -47,4 +50,4 @@ The Admin panel uses a deep neutral palette to reduce eye strain during long edi
 *   **Sizing**: Consistent 18px-20px for sidebar items; 14px-16px for inline actions.
 
 ---
-*Maintained by Antigravity AI — Admin Specific Design v1.0*
+*Maintained by Antigravity AI — Admin Specific Design v1.2*

@@ -191,3 +191,30 @@ model Navigation {
 
   @@map("navigation")
 }
+
+model RssSource {
+  id        String   @id @default(uuid())
+  name      String
+  url       String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("rss_sources")
+}
+
+model DiscoveryCache {
+  id          String   @id @default(uuid())
+  title       String
+  link        String   @unique
+  pubDate     DateTime
+  content     String?
+  author      String?
+  source      String
+  categories    String?  // JSON stringified array
+  isImported    Boolean  @default(false) @map("is_imported")
+  isBookmarked  Boolean  @default(false) @map("is_bookmarked")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@index([pubDate])
+  @@map("discovery_cache")
+}

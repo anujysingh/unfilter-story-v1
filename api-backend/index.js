@@ -2,6 +2,14 @@ import Fastify from 'fastify'
 import cors from '@fastify/cors'
 import { PrismaClient } from '@prisma/client'
 import 'dotenv/config'
+import Parser from 'rss-parser'
+
+const parser = new Parser({
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Accept': 'application/rss+xml, application/xml;q=0.9, */*;q=0.8'
+  }
+})
 
 const fastify = Fastify({
   logger: true,
@@ -33,9 +41,8 @@ fastify.get('/v1/articles', async (request, reply) => {
 
 // === CMS API ROUTES ===
 fastify.post('/cms/v1/articles', async (request, reply) => {
+  const { headline, body, categoryId, category, tags, status, publishedAt, featuredImageUrl } = request.body
   try {
-    const { headline, body, categoryId, category, tags, status, publishedAt, featuredImageUrl } = request.body
-    
     // Slugify the headline. Fallback to generic if empty.
     const slugBasis = headline || 'untitled'
     const slug = slugBasis.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
@@ -44,7 +51,7 @@ fastify.post('/cms/v1/articles', async (request, reply) => {
     let finalCategoryId = categoryId
     if (!finalCategoryId && category) {
       const cat = await prisma.category.findFirst({ 
-        where: { name: { equals: category } } // SQLite is case-insensitive for some operations, but Prisma helps here
+        where: { name: { equals: category } }
       })
       if (cat) finalCategoryId = cat.id
     }
@@ -443,6 +450,301 @@ fastify.post('/cms/v1/navigation/reorder', async (request, reply) => {
     reply.code(500).send({ error: 'Failed to reorder navigation items' })
   }
 })
+
+// === USER API ROUTES ===
+fastify.get('/cms/v1/users', async (request, reply) => {
+  try {
+    const users = await prisma.cmsUser.findMany({
+      orderBy: { createdAt: 'desc' }
+    })
+    return users
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Failed to fetch users' })
+  }
+})
+
+fastify.post('/cms/v1/users', async (request, reply) => {
+  try {
+    const { email, firstName, lastName, role, designation } = request.body
+    
+    // In a real app, we'd send an invite email and hash a temporary password
+    // For this build, we'll create a placeholder user
+    const user = await prisma.cmsUser.create({
+      data: {
+        email,
+        firstName,
+        lastName,
+        role: role || 'Editor',
+        designation,
+        passwordHash: 'placeholder', // Required by schema
+        isActive: true
+      }
+    })
+    return user
+  } catch (error) {
+    fastify.log.error(error)
+    if (error.code === 'P2002') {
+      return reply.code(400).send({ error: 'A user with this email already exists' })
+    }
+    reply.code(500).send({ error: 'Failed to create user' })
+  }
+})
+
+fastify.put('/cms/v1/users/:id', async (request, reply) => {
+  try {
+    const { id } = request.params
+    const { role, isActive, designation } = request.body
+    const user = await prisma.cmsUser.update({
+      where: { id },
+      data: { role, isActive, designation }
+    })
+    return user
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Failed to update user' })
+  }
+})
+
+fastify.delete('/cms/v1/users/:id', async (request, reply) => {
+  try {
+    const { id } = request.params
+    await prisma.cmsUser.delete({ where: { id } })
+    return { success: true }
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Failed to delete user' })
+  }
+})
+
+// === RSS NEWS ENGINE ===
+fastify.get('/cms/v1/rss/sources', async (request, reply) => {
+  try {
+    const sources = await prisma.rssSource.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    return sources;
+  } catch (error) {
+    fastify.log.error(error);
+    reply.code(500).send({ error: 'Failed to fetch RSS sources' });
+  }
+});
+
+fastify.post('/cms/v1/rss/sources', async (request, reply) => {
+  try {
+    const { name, url } = request.body;
+    const source = await prisma.rssSource.create({
+      data: { name, url }
+    });
+    return source;
+  } catch (error) {
+    fastify.log.error(error);
+    reply.code(500).send({ error: 'Failed to add RSS source' });
+  }
+});
+
+fastify.delete('/cms/v1/rss/sources/:id', async (request, reply) => {
+  try {
+    const { id } = request.params;
+    await prisma.rssSource.delete({ where: { id } });
+    return { success: true };
+  } catch (error) {
+    fastify.log.error(error);
+    reply.code(500).send({ error: 'Failed to delete RSS source' });
+  }
+});
+
+fastify.get('/cms/v1/rss/fetch', async (request, reply) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 10, 
+      sync = false, 
+      bookmarkedOnly = false,
+      sources = '',
+      categories = '',
+      dateFilter = 'all'
+    } = request.query;
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const take = Math.min(parseInt(limit), 50);
+
+    const where = {};
+
+    // 1. Bookmark Filter
+    if (bookmarkedOnly === 'true' || bookmarkedOnly === true) {
+      where.isBookmarked = true;
+    }
+
+    // 2. Source Filter
+    if (sources) {
+      where.source = { in: sources.split(',') };
+    }
+
+    // 3. Category Filter
+    if (categories) {
+      const catList = categories.split(',');
+      where.OR = catList.map(cat => ({
+        categories: { contains: cat }
+      }));
+    }
+
+    // 4. Date Filter
+    if (dateFilter !== 'all') {
+      const now = new Date();
+      if (dateFilter === '7d') {
+        where.pubDate = { gte: new Date(now.setDate(now.getDate() - 7)) };
+      } else if (dateFilter === '15d') {
+        where.pubDate = { gte: new Date(now.setDate(now.getDate() - 15)) };
+      } else if (dateFilter === '30d') {
+        where.pubDate = { gte: new Date(now.setDate(now.getDate() - 30)) };
+      }
+    }
+
+    // Initial source check
+    const sourcesCount = await prisma.rssSource.count();
+    if (sourcesCount === 0) {
+      const initialSources = [
+        { name: 'Inc42 Funding', url: 'https://inc42.com/tag/funding/feed/' },
+        { name: 'YourStory', url: 'https://yourstory.com/feed' },
+        { name: 'Entrackr', url: 'https://entrackr.com/rss' },
+        { name: 'Economic Times', url: 'https://economictimes.indiatimes.com/small-biz/startups/rssfeeds/11959139.cms' },
+        { name: 'StartupNews.fyi', url: 'https://startupnews.fyi/feed/' },
+        { name: 'Trak.in Startups', url: 'https://trak.in/feed' },
+        { name: 'Business Standard', url: 'https://www.business-standard.com/rss/home_page_top_stories.rss' },
+        { name: 'VCCircle Alternative', url: 'https://www.livemint.com/rss/companies' },
+        { name: 'StartupTalky', url: 'https://startuptalky.com/rss' },
+        { name: 'IndianStartupTimes', url: 'https://www.indianstartuptimes.com/feed' },
+        { name: 'TOI Business', url: 'https://timesofindia.indiatimes.com/rssfeeds/1898055.cms' }
+      ];
+      for (const s of initialSources) {
+        await prisma.rssSource.create({ data: s }).catch(() => {});
+      }
+    }
+
+    const cacheCount = await prisma.discoveryCache.count();
+    const shouldSync = sync === 'true' || sync === true || cacheCount === 0;
+
+    if (shouldSync) {
+      const activeSources = await prisma.rssSource.findMany({ where: { isActive: true } });
+      const majorSources = [
+        { name: 'Inc42', keys: ['inc42'] },
+        { name: 'YourStory', keys: ['yourstory'] },
+        { name: 'Entrackr', keys: ['entrackr', 'entracker'] },
+        { name: 'Economic Times', keys: ['economic times', 'et auto', 'et tech'] },
+        { name: 'Business Standard', keys: ['business standard'] },
+        { name: 'VCCircle', keys: ['vccircle'] },
+        { name: 'Trak.in', keys: ['trak.in', 'trakin'] },
+        { name: 'LiveMint', keys: ['livemint', 'mint'] },
+        { name: 'StartupTalky', keys: ['startuptalky'] },
+        { name: 'IndianStartupTimes', keys: ['indianstartuptimes', 'indian startup times'] },
+        { name: 'Times of India', keys: ['times of india', 'toi'] },
+        { name: 'PNN', keys: ['pnn', 'press note network'] },
+        { name: 'PTI', keys: ['pti', 'press trust of india'] },
+        { name: 'ANI', keys: ['ani news'] },
+        { name: 'Search Engine Journal', keys: ['search engine journal', 'sej'] }
+      ];
+
+      for (const source of activeSources) {
+        try {
+          console.log(`Deep Sync: Starting scan for ${source.name}...`);
+          // Archive Recovery: Fetch up to 10 pages of historical data
+          const pagesToFetch = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; 
+          for (const pageNum of pagesToFetch) {
+            let fetchUrl = source.url;
+            if (pageNum > 1) {
+               // Support multiple pagination styles
+               const separator = fetchUrl.includes('?') ? '&' : '?';
+               // Add both common pagination params to be safe, or try sequentially
+               fetchUrl += `${separator}paged=${pageNum}&page=${pageNum}`;
+            }
+
+            console.log(`  Scanning Depth ${pageNum}: ${fetchUrl}`);
+            const feed = await parser.parseURL(fetchUrl);
+            
+            if (!feed.items || feed.items.length === 0) {
+              console.log(`  Depth ${pageNum} empty. Stopping scan.`);
+              break;
+            }
+
+            for (const item of feed.items) {
+              const authorRaw = item.creator || item.author || 'Editorial Team';
+              const authorLower = authorRaw.toLowerCase();
+              const titleLower = (item.title || '').toLowerCase();
+              
+              let detectedSource = source.name; 
+              const match = majorSources.find(ms => 
+                ms.keys.some(k => authorLower.includes(k) || titleLower.includes(k))
+              );
+              
+              if (match) detectedSource = match.name;
+
+              var dateObj = item.pubDate ? new Date(item.pubDate) : new Date();
+              var validDate = isNaN(dateObj.getTime()) ? new Date() : dateObj;
+
+              await prisma.discoveryCache.upsert({
+                where: { link: item.link },
+                update: {}, 
+                create: {
+                  title: item.title || 'Untitled Signal',
+                  link: item.link,
+                  pubDate: validDate,
+                  content: (item.contentSnippet || item.content || item.description || item.summary || '').substring(0, 5000),
+                  author: authorRaw,
+                  source: detectedSource,
+                  categories: JSON.stringify(item.categories || [])
+                }
+              }).catch(() => {});
+            }
+          }
+        } catch (err) {
+          console.error(`Deep Sync failed for ${source.name}: ${err.message}`);
+        }
+      }
+    }
+
+    const total = await prisma.discoveryCache.count({ where });
+    const items = await prisma.discoveryCache.findMany({
+      where,
+      orderBy: { pubDate: 'desc' },
+      skip,
+      take
+    });
+
+    return {
+      items: items.map(i => ({
+        ...i,
+        categories: JSON.parse(i.categories || '[]')
+      })),
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: take,
+        totalPages: Math.ceil(total / take)
+      }
+    };
+  } catch (error) {
+    fastify.log.error(error);
+    reply.code(500).send({ error: 'Failed to process discovery stream' });
+  }
+});
+
+fastify.post('/cms/v1/rss/bookmark/:id', async (request, reply) => {
+  try {
+    const { id } = request.params;
+    const item = await prisma.discoveryCache.findUnique({ where: { id } });
+    if (!item) return reply.code(404).send({ error: 'Item not found' });
+    
+    const updated = await prisma.discoveryCache.update({
+      where: { id },
+      data: { isBookmarked: !item.isBookmarked }
+    });
+    return updated;
+  } catch (error) {
+    fastify.log.error(error);
+    reply.code(500).send({ error: 'Failed to toggle bookmark' });
+  }
+});
 
 // Start server
 const start = async () => {

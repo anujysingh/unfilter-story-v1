@@ -174,8 +174,8 @@ export default function Media() {
                 </button>
                 
                 <div className="text-white">
-                  <p className="text-[10px] font-black uppercase tracking-tighter truncate leading-none mb-1">{m.filename || 'Untitled'}</p>
-                  <div className="flex items-center gap-2 text-[8px] font-bold opacity-70">
+                  <p className="text-xs font-black uppercase tracking-tighter truncate leading-none mb-1">{m.filename || 'Untitled'}</p>
+                  <div className="flex items-center gap-2 text-[10px] font-bold opacity-70">
                     <span>{formatSize(m.sizeBytes)}</span>
                     <div className="w-1 h-1 rounded-full bg-white/30"></div>
                     <span>{new Date(m.createdAt).toLocaleDateString()}</span>

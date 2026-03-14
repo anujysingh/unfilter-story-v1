@@ -274,7 +274,7 @@ export default function Articles() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="bg-transparent text-[12px] font-medium text-gray-600 focus:outline-none cursor-pointer w-[110px]"
+                className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer w-[110px]"
                 placeholder="From"
               />
               <ArrowRight className="w-3 h-3 text-gray-300" />
@@ -282,7 +282,7 @@ export default function Articles() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="bg-transparent text-[12px] font-medium text-gray-600 focus:outline-none cursor-pointer w-[110px]"
+                className="bg-transparent text-sm font-medium text-gray-600 focus:outline-none cursor-pointer w-[110px]"
                 placeholder="To"
               />
             </div>
@@ -386,12 +386,12 @@ export default function Articles() {
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap gap-1 max-w-[200px]">
                       {article.tags && article.tags.length > 0 ? article.tags.slice(0, 3).map(tag => (
-                        <span key={tag} className="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 text-[10px] font-medium text-gray-600">
+                        <span key={tag} className="inline-flex items-center px-1.5 py-0.5 rounded bg-gray-100 text-xs font-medium text-gray-600">
                           {tag}
                         </span>
-                      )) : <span className="text-gray-400 text-[10px]">No tags</span>}
+                      )) : <span className="text-gray-400 text-xs">No tags</span>}
                       {article.tags && article.tags.length > 4 && (
-                        <span className="text-[10px] text-gray-400">+{article.tags.length - 3} more</span>
+                        <span className="text-xs text-gray-400">+{article.tags.length - 3} more</span>
                       )}
                     </div>
                   </td>
@@ -512,7 +512,7 @@ export default function Articles() {
             
             <div className="p-8 space-y-6">
                <div className="space-y-2">
-                 <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">New Publishing Date</label>
+                 <label className="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-1">New Publishing Date</label>
                  <div className="relative group">
                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[var(--cms-accent)] transition-colors" />
                    <input 

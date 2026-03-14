@@ -50,7 +50,7 @@ function SortableMenuItem({ item, level = 0, openModal, handleDelete, updateDisp
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-[var(--cms-text-primary)] tracking-tight">{item.label}</span>
-              <span className="text-[10px] px-2 py-0.5 bg-[var(--cms-accent-light)] text-[var(--cms-accent)] rounded-lg font-mono uppercase font-bold">{item.type}</span>
+              <span className="text-xs px-2 py-0.5 bg-[var(--cms-accent-light)] text-[var(--cms-accent)] rounded-lg font-mono uppercase font-bold">{item.type}</span>
             </div>
             <div className="flex items-center gap-1 text-xs text-[var(--cms-text-secondary)] font-mono">
               <ExternalLink size={10} />
@@ -61,7 +61,7 @@ function SortableMenuItem({ item, level = 0, openModal, handleDelete, updateDisp
         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
           <button 
             onClick={() => openModal(null, item.id, item.label)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--cms-accent)] text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:shadow-lg transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--cms-accent)] text-white text-xs font-black uppercase tracking-widest rounded-lg hover:shadow-lg transition-all"
           >
             <Plus size={12} />
             Sub-menu
@@ -284,7 +284,7 @@ export default function Navigation() {
         </div>
         <button 
           onClick={() => openModal()}
-          className="px-6 py-3 bg-[var(--cms-accent)] text-white font-extrabold text-sm rounded-xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest"
+          className="px-6 py-3 bg-[var(--cms-accent)] text-white font-extrabold text-base rounded-xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all flex items-center gap-2 tracking-widest"
         >
           <Plus size={18} />
           Add Menu Item
@@ -338,14 +338,14 @@ export default function Navigation() {
               </h2>
               {formData.parentLabel && !editingItem && (
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-[10px] font-bold text-[var(--cms-text-secondary)] uppercase tracking-widest">Parent:</span>
-                  <span className="text-[10px] font-black text-[var(--cms-accent)] uppercase tracking-widest">{formData.parentLabel}</span>
+                  <span className="text-xs font-bold text-[var(--cms-text-secondary)] uppercase tracking-widest">Parent:</span>
+                  <span className="text-xs font-black text-[var(--cms-accent)] uppercase tracking-widest">{formData.parentLabel}</span>
                 </div>
               )}
             </div>
             <form onSubmit={handleSave} className="p-8 space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Label</label>
+                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Label</label>
                 <input 
                   type="text"
                   required
@@ -357,7 +357,7 @@ export default function Navigation() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">URL / Link</label>
+                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">URL / Link</label>
                 <input 
                   type="text"
                   required
@@ -373,7 +373,7 @@ export default function Navigation() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Type</label>
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Type</label>
                   <select 
                     value={formData.type}
                     onChange={e => setFormData({ ...formData, type: e.target.value })}
@@ -385,7 +385,7 @@ export default function Navigation() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Order</label>
+                  <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Order</label>
                   <input 
                     type="number"
                     value={formData.displayOrder}
@@ -399,13 +399,13 @@ export default function Navigation() {
                 <button 
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 py-4 bg-gray-50 text-[var(--cms-text-secondary)] font-extrabold text-xs rounded-2xl hover:bg-gray-100 transition-all tracking-widest"
+                  className="flex-1 py-4 bg-gray-50 text-[var(--cms-text-secondary)] font-extrabold text-sm rounded-2xl hover:bg-gray-100 transition-all tracking-widest"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="flex-1 py-4 bg-[var(--cms-accent)] text-white font-extrabold text-xs rounded-2xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all tracking-widest"
+                  className="flex-1 py-4 bg-[var(--cms-accent)] text-white font-extrabold text-sm rounded-2xl shadow-[0_8px_20px_rgba(0,93,59,0.2)] hover:scale-105 active:scale-95 transition-all tracking-widest"
                 >
                   {editingItem ? 'Update Item' : 'Create Item'}
                 </button>
