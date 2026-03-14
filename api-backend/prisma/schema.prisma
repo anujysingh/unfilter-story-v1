@@ -196,6 +196,7 @@ model RssSource {
   id        String   @id @default(uuid())
   name      String
   url       String   @unique
+  logoUrl   String?  @map("logo_url")
   isActive  Boolean  @default(true) @map("is_active")
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -210,6 +211,7 @@ model DiscoveryCache {
   content     String?
   author      String?
   source      String
+  logoUrl     String?  @map("logo_url")
   categories    String?  // JSON stringified array
   isImported    Boolean  @default(false) @map("is_imported")
   isBookmarked  Boolean  @default(false) @map("is_bookmarked")

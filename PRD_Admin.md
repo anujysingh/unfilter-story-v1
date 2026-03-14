@@ -1,8 +1,8 @@
 # PRD — CMS Admin (Editorial Suite)
 # Unfilter Story — News Platform & Editorial Infrastructure
 
-**Version:** 2.2  
-**Date:** March 14, 2026  
+**Version:** 2.6  
+**Date:** March 15, 2026  
 **Status:** Feature Complete — Industrial Archival Cycle Active  
 **Owner:** Product Engineering Team
 
@@ -110,11 +110,27 @@ The **Unfilter Story CMS Admin** is a professional-grade editorial environment d
     *   **Path Validation**: Real-time status checks for permalinks to ensure no routing conflicts.
 
 ### 3.10 Discovery Engine (Signal Intelligence Console)
-*   **Industrial-Grade Research Environment**:
-    *   High-contrast, pixel-perfect UI tailored for high-speed editorial scanning.
+*   **Professional Research Environment**:
+    *   High-density, pixel-perfect UI with **Natural Casing** and **Non-Italic** typographic mandate for maximum legibility.
+    *   **Logo Intelligence System**:
+        *   **Real-Time Visual Attribution Sync**: Backend-driven mapping of partner logos to news signals during every fetch cycle, ensuring zero-latency brand recognition.
+        *   **Multi-Layered Fallback Hierarchy**: A four-stage resilience protocol for elusive logos:
+            1. **Primary**: High-fidelity logo from curated partner metadata.
+            2. **Secondary**: Tactical domain-based favicon harvesting (Google S2).
+            3. **Tertiary**: Emergency lookup via *IconHorse* intelligence vectors.
+            4. **Final Response**: High-contrast typographic badge ensuring zero "broken" visual states.
+    *   **Ergonomic Research Sidebar (Collapsible UX)**:
+        *   **Tactical Parameter Management**: All intelligence vectors—*Temporal Radius, Startup Category, Industries, and News Perimeter*—are individually collapsible to optimize vertical focus.
+        *   **Fluid Interaction Layer**: Smooth entry/exit animations with persistent batch action controls (ALL | CLR).
     *   **Signal Navigation Matrix**:
         *   **News Perimeter Selection**: Multi-select filtering across the 16-point Strategic Intelligence Matrix (*YourStory, Inc42, Entrackr, Economic Times, VCCircle, LiveMint, Moneycontrol, StartupTalky, Entrepreneur India, The Ken, Morning Context, Finshots, IndianStartupNews, TICE News, StartupNews.fyi, Google News*).
-        *   **Industry Signal Matrix**: Multi-select thematic filtering across a **Fixed 12-point Industrial Intelligence Taxonomy**. Automated classification powered by a **Thematic Routing Engine** with a multi-sector keyword lexicon.
+        *   **Startup Category Matrix**: Multi-select thematic filtering across a **Dual-Vector Intelligence Matrix** (21 Industry Verticals + 10 Business Signals).
+        *   **Multi-Tiered Signal Architecture**: Automated high-confidence classification for 10 critical business events (**Funding, Startup Launch, Acquisition, Shutdown, Layoffs, Product Launch, Founder Interview, Pivot, Funding Ask, Revenue Milestone**).
+        *   **Signal Conflict Resolution (PRD v1.9 Ruleset)**:
+            1.  **Rule 1 — Priority Hierarchy**: If multiple signals compete, the higher-priority signal wins. Order: **Funding > Shutdown > Layoffs > Acquisition > Pivot > Funding Ask > Revenue Milestone > Startup Launch > Product Launch > Founder Interview**.
+            2.  **Rule 2 — Multi-Tag Capability**: Articles covering multiple discrete events (e.g., "raises $200M" + "turns profitable") are assigned dual tags.
+            3.  **Rule 3 — Strategic Cap**: A maximum of **2 tags** per signal pulse. If 3+ signals qualify, Rule 1 selects the top 2.
+            4.  **Rule 4 — Headline Subject Weighting**: Triggers found in the grammatical subject/headline take absolute priority over body mentions (Tiebreaker).
 *   **Tactical Control Row**:
     *   **View Mode Matrix**: Iconographic toggles for high-density **Grid** or **List** viewing.
     *   **Precision Calendar Matrix**: Interactive date selection for specific windows (e.g., 13th March 2026). Users can provide only a **Start Date** to isolate signals for a single day (EndDate is non-mandatory).
@@ -124,20 +140,21 @@ The **Unfilter Story CMS Admin** is a professional-grade editorial environment d
     *   **Temporal Precision Guard**: Mandatory capture of original publishing date/time (isoDate priority). Fallback to system time is strictly prohibited to prevent signal spoofing.
 *   **Signal Intelligence Bar**:
     *   **Dynamic Status Core**: Real-time tracking of **Total Signals** across the active research perimeter.
-    *   **Pagination Console**: High-precision navigation with deep tracking (e.g., "PAGE 1 OF 22").
+    *   **Pagination Console**: High-precision navigation with deep tracking (e.g., "Unit 1 / 58").
+    *   **Emergency Signal Sync**: Circular manual trigger to bypass cache and force a fresh re-linking of brand assets and signal metadata.
 *   **Deep Signal Sync (Backend Architecture)**:
-    *   **Historical Archive Recovery**: Automated multi-page RSS crawling with **High-Density Depth (up to 100 pages)** to bridge multi-month news gaps for high-frequency sources.
+    *   **Thematic Routing Engine**: Automated keyword mapping layer that performs dual-vector classification and priority-based conflict resolution.
+    *   **Signal Keyword Dictionary**: A multi-tiered lexicon (v1.9) with specific confidence thresholds for industrial business events.
+    *   **Historical Archive Recovery**: Automated multi-page RSS crawling with **High-Density Depth (up to 100 pages)**.
     *   **Autonomous Archival Worker**: Background cron-style cycle (4-hour interval) ensuring the 1-year research lifecycle is permanently populated.
-    *   **Parallel Ingestion Core**: Simultaneous processing of 3-source batches to accelerate signal acquisition without triggering rate limits.
-    *   **Thematic Routing Engine**: Automated keyword mapping layer that classifies raw signals into specialized industry verticals with sub-second precision.
-    *   **Source Normalization Engine**: Automated publisher identification and author-level routing.
+    *   **Parallel Ingestion Core**: Simultaneous processing of 3-source batches to accelerate signal acquisition.
 
 ---
 
 ## 4. Technical Requirements
 *   **Frontend**: React 19 & Vite.
-*   **API**: Node.js Fastify (50MB payload limit) with **RSS Parsing (Depth 100)** and autonomous background workers.
-*   **Database**: SQLite/PostgreSQL via Prisma with **High-Density Temporal Indexing**.
+*   **API**: Node.js Fastify (50MB payload limit) with **RSS Parsing (Depth 100)**, integrated **Logo Fallback Services** (Google, IconHorse), and autonomous background workers.
+*   **Database**: SQLite/PostgreSQL via Prisma with **High-Density Temporal Indexing** and Real-time Brand Mapping.
 
 ---
-*Maintained by Antigravity AI — Admin PRD v2.2*
+*Maintained by Antigravity AI — Admin PRD v2.6*

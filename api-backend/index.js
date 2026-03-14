@@ -626,31 +626,32 @@ fastify.get('/cms/v1/rss/fetch', async (request, reply) => {
     where.pubDate = { gte: gteDate };
     if (lteDate) where.pubDate.lte = lteDate;
 
-    // Initial source check
+    // Initial source check + Logo Integrity Verification
     const sourcesCount = await prisma.rssSource.count();
-    if (sourcesCount === 0) {
+    const missingLogos = await prisma.rssSource.count({ where: { logoUrl: null } });
+    if (sourcesCount === 0 || missingLogos > 0) {
       const initialSources = [
-        { name: 'YourStory', url: 'https://yourstory.com/feed' },
-        { name: 'Inc42', url: 'https://inc42.com/feed/' },
-        { name: 'Entrackr', url: 'https://entrackr.com/feed/' },
-        { name: 'Economic Times', url: 'https://economictimes.indiatimes.com/small-biz/startups/rssfeeds/11959139.cms' },
-        { name: 'VCCircle', url: 'https://news.google.com/rss/search?q=site:vccircle.com&hl=en-IN&gl=IN&ceid=IN:en' },
-        { name: 'LiveMint', url: 'https://www.livemint.com/rss/companies' },
-        { name: 'Moneycontrol', url: 'https://news.google.com/rss/search?q=site:moneycontrol.com+startup&hl=en-IN&gl=IN&ceid=IN:en' },
-        { name: 'StartupTalky', url: 'https://startuptalky.com/rss/' },
-        { name: 'Entrepreneur India', url: 'https://india.entrepreneur.com/feed/' },
-        { name: 'The Ken', url: 'https://the-ken.com/feed/' },
-        { name: 'Morning Context', url: 'https://themorningcontext.com/feed/' },
-        { name: 'Finshots', url: 'https://finshots.in/rss/' },
-        { name: 'IndianStartupNews', url: 'https://indianstartupnews.com/rss' },
-        { name: 'TICE News', url: 'https://www.tice.news/category/startup-story/feed/' },
-        { name: 'StartupNews.fyi', url: 'https://startupnews.fyi/feed/' },
-        { name: 'Google News', url: 'https://news.google.com/rss/search?q=Indian+Startup+News&hl=en-IN&gl=IN&ceid=IN:en' }
+        { name: 'YourStory', url: 'https://yourstory.com/feed', logoUrl: 'https://www.google.com/s2/favicons?domain=yourstory.com&sz=128' },
+        { name: 'Inc42', url: 'https://inc42.com/feed/', logoUrl: 'https://www.google.com/s2/favicons?domain=inc42.com&sz=128' },
+        { name: 'Entrackr', url: 'https://entrackr.com/feed/', logoUrl: 'https://www.google.com/s2/favicons?domain=entrackr.com&sz=128' },
+        { name: 'Economic Times', url: 'https://economictimes.indiatimes.com/small-biz/startups/rssfeeds/11959139.cms', logoUrl: 'https://www.google.com/s2/favicons?domain=economictimes.indiatimes.com&sz=128' },
+        { name: 'VCCircle', url: 'https://news.google.com/rss/search?q=site:vccircle.com&hl=en-IN&gl=IN&ceid=IN:en', logoUrl: 'https://www.google.com/s2/favicons?domain=vccircle.com&sz=128' },
+        { name: 'LiveMint', url: 'https://www.livemint.com/rss/companies', logoUrl: 'https://www.google.com/s2/favicons?domain=livemint.com&sz=128' },
+        { name: 'Moneycontrol', url: 'https://news.google.com/rss/search?q=site:moneycontrol.com+startup&hl=en-IN&gl=IN&ceid=IN:en', logoUrl: 'https://www.google.com/s2/favicons?domain=moneycontrol.com&sz=128' },
+        { name: 'StartupTalky', url: 'https://startuptalky.com/rss/', logoUrl: 'https://www.google.com/s2/favicons?domain=startuptalky.com&sz=128' },
+        { name: 'Entrepreneur India', url: 'https://india.entrepreneur.com/feed/', logoUrl: 'https://www.google.com/s2/favicons?domain=entrepreneur.com&sz=128' },
+        { name: 'The Ken', url: 'https://the-ken.com/feed/', logoUrl: 'https://www.google.com/s2/favicons?domain=the-ken.com&sz=128' },
+        { name: 'Morning Context', url: 'https://themorningcontext.com/feed/', logoUrl: 'https://www.google.com/s2/favicons?domain=themorningcontext.com&sz=128' },
+        { name: 'Finshots', url: 'https://finshots.in/rss/', logoUrl: 'https://www.google.com/s2/favicons?domain=finshots.in&sz=128' },
+        { name: 'IndianStartupNews', url: 'https://indianstartupnews.com/rss', logoUrl: 'https://www.google.com/s2/favicons?domain=indianstartupnews.com&sz=128' },
+        { name: 'TICE News', url: 'https://www.tice.news/category/startup-story/feed/', logoUrl: 'https://www.google.com/s2/favicons?domain=tice.news&sz=128' },
+        { name: 'StartupNews.fyi', url: 'https://startupnews.fyi/feed/', logoUrl: 'https://play-lh.googleusercontent.com/SI26dmhoYzDnpUoEm1pQpRECb8o6GKkUV8wOOnKWRSLVWdA6ln6Wshw1jHH-DNt0yg' },
+        { name: 'Google News', url: 'https://news.google.com/rss/search?q=Indian+Startup+News&hl=en-IN&gl=IN&ceid=IN:en', logoUrl: 'https://www.google.com/s2/favicons?domain=news.google.com&sz=128' }
       ];
       for (const s of initialSources) {
         await prisma.rssSource.upsert({ 
           where: { url: s.url },
-          update: { name: s.name },
+          update: { name: s.name, logoUrl: s.logoUrl },
           create: { ...s, isActive: true } 
         }).catch(() => {});
       }
@@ -673,15 +674,34 @@ fastify.get('/cms/v1/rss/fetch', async (request, reply) => {
       take
     });
 
-    return {
-      items: items.map(i => ({
+    // Strategy: Real-time Visual Attribution Sync
+    // Fetch current source identity mapping to ensure visual consistency
+    const activeSources = await prisma.rssSource.findMany();
+    const logoMap = {};
+    activeSources.forEach(s => {
+      logoMap[s.name.toLowerCase()] = s.logoUrl;
+    });
+
+    const populatedItems = items.map(i => {
+      let logoUrl = i.logoUrl;
+      // Hot-lookup: If cache is stale or missing logo, cross-reference with active perimeter
+      if (!logoUrl && i.source) {
+        logoUrl = logoMap[i.source.toLowerCase()];
+      }
+
+      return {
         ...i,
+        logoUrl,
         categories: JSON.parse(i.categories || '[]')
-      })),
+      };
+    });
+
+    return {
+      items: populatedItems,
       pagination: {
         total,
         page: parseInt(page),
-        limit: take,
+        limit: parseInt(limit),
         totalPages: Math.ceil(total / take)
       }
     };
@@ -712,38 +732,110 @@ fastify.post('/cms/v1/rss/bookmark/:id', async (request, reply) => {
 async function runDeepSync() {
   const activeSources = await prisma.rssSource.findMany({ where: { isActive: true } });
   
-  const industryVerticals = [
-    { name: 'Fintech', keys: ['payments', 'lending', 'insurtech', 'wealthtech', 'regtech', 'fintech', 'banking', 'upi', 'neobank', 'wealth management', 'insurance', 'stock brokerage'] },
-    { name: 'EdTech', keys: ['k-12', 'higher education', 'upskilling', 'test prep', 'edtech', 'learning', 'classroom', 'skill development', 'tutoring', 'academy'] },
-    { name: 'AI / ML', keys: ['generative ai', 'computer vision', 'nlp', 'ai infrastructure', 'ai/ml', 'artificial intelligence', 'machine learning', 'llm', 'deep learning', 'automation'] },
-    { name: 'HealthTech', keys: ['digital health', 'medtech', 'pharmatech', 'mental health', 'healthtech', 'medical', 'healthcare', 'clinics', 'diagnostics', 'telemedicine'] },
-    { name: 'AgriTech', keys: ['precision farming', 'supply chain', 'agrifinance', 'agritech', 'farming', 'agriculture', 'harvest', 'farmer', 'agrifood'] },
-    { name: 'CleanTech / EV', keys: ['electric vehicles', 'renewable energy', 'green tech', 'cleantech', 'ev', 'battery', 'solar', 'wind', 'sustainability', 'charging infrastructure'] },
-    { name: 'SaaS / B2B', keys: ['enterprise software', 'dev tools', 'hr tech', 'martech', 'saas', 'b2b', 'software-as-a-service', 'crm', 'workflow', 'clouddays'] },
-    { name: 'D2C / E-Commerce', keys: ['consumer brands', 'quick commerce', 'fashion', 'd2c', 'e-commerce', 'omnichannel', 'retail', 'marketplace', 'wellness', 'beauty', 'direct-to-consumer', 'personal care', 'jewellery', 'apparel', 'direct to consumer'] },
-    { name: 'LogisTech', keys: ['supply chain', 'warehousing', 'last-mile delivery', 'logistech', 'logistics', 'delivery', 'fleet', 'shipping', 'freight'] },
-    { name: 'SpaceTech / DeepTech', keys: ['semiconductors', 'space', 'quantum', 'spacetech', 'deeptech', 'satellite', 'rocketry', 'isro', 'robotics'] },
-    { name: 'Gaming / Media', keys: ['gaming', 'media', 'creator economy', 'esports', 'publisher', 'content creation', 'streaming', 'entertainment', 'influencer economy'] },
-    { name: 'Real Estate Tech', keys: ['proptech', 'construction tech', 'real estate', 'property', 'real estate tech', 'homebuying', 'coworking'] }
-  ];
+    const industryVerticals = [
+      { name: 'Fintech', keys: ['payments', 'lending', 'insurtech', 'wealthtech', 'regtech', 'fintech', 'banking', 'upi', 'neobank', 'wealth management', 'insurance', 'stock brokerage'] },
+      { name: 'EdTech', keys: ['k-12', 'higher education', 'upskilling', 'test prep', 'edtech', 'learning', 'classroom', 'skill development', 'tutoring', 'academy'] },
+      { name: 'HealthTech', keys: ['digital health', 'medtech', 'pharmatech', 'mental health', 'healthtech', 'medical', 'healthcare', 'clinics', 'diagnostics', 'telemedicine'] },
+      { name: 'MobilityTech', keys: ['mobilitytech', 'ride-hailing', 'electric mobility', 'autonomous vehicles', 'ride sharing', 'scooters', 'micro-mobility', 'urban transport', 'car sharing'] },
+      { name: 'FoodTech', keys: ['foodtech', 'cloud kitchen', 'food delivery', 'grocery delivery', 'restaurant tech', 'agrifoodtech', 'food subscription'] },
+      { name: 'TravelTech', keys: ['traveltech', 'hotel booking', 'tourism', 'travel agency', 'airline tech', 'staycation', 'hospitality tech'] },
+      { name: 'AI / ML', keys: ['generative ai', 'computer vision', 'nlp', 'ai infrastructure', 'ai/ml', 'artificial intelligence', 'machine learning', 'llm', 'deep learning', 'automation'] },
+      { name: 'Cybersecurity', keys: ['cybersecurity', 'encryption', 'firewall', 'data protection', 'hacking', 'threat detection', 'security software', 'identity management', 'zero trust'] },
+      { name: 'Web3 / Blockchain', keys: ['web3', 'blockchain', 'crypto', 'nft', 'decentralized', 'metaverse', 'defi', 'ethereum', 'bitcoin', 'smart contracts', 'dao'] },
+      { name: 'ClimateTech / Sustainability', keys: ['climatetech', 'sustainability', 'carbon credit', 'circular economy', 'waste management', 'esg', 'environmental', 'green tech', 'renewable energy'] },
+      { name: 'AgriTech', keys: ['precision farming', 'supply chain', 'agrifinance', 'agritech', 'farming', 'agriculture', 'harvest', 'farmer', 'agrifood'] },
+      { name: 'CleanTech / EV', keys: ['electric vehicles', 'cleantech', 'ev', 'battery', 'solar', 'wind', 'charging infrastructure'] },
+      { name: 'Future of Work / HRTech', keys: ['hrtech', 'remote work', 'talent acquisition', 'hiring', 'payroll', 'workforce management', 'recruitment', 'future of work', 'employee engagement'] },
+      { name: 'Developer Infrastructure / Cloud', keys: ['devops', 'cloud infrastructure', 'backend', 'cloud native', 'api', 'serverless', 'kubernetes', 'aws', 'azure', 'dev tools', 'infrastructure-as-code'] },
+      { name: 'Social / Community Platforms', keys: ['social media', 'community platform', 'networking', 'social network', 'dating app', 'content platform', 'short video', 'creator economy'] },
+      { name: 'SaaS / B2B', keys: ['enterprise software', 'martech', 'saas', 'b2b', 'software-as-a-service', 'crm', 'workflow', 'clouddays'] },
+      { name: 'D2C / E-Commerce', keys: ['consumer brands', 'quick commerce', 'fashion', 'd2c', 'e-commerce', 'omnichannel', 'retail', 'marketplace', 'wellness', 'beauty', 'direct-to-consumer', 'personal care', 'jewellery', 'apparel', 'direct to consumer'] },
+      { name: 'LogisTech', keys: ['supply chain', 'warehousing', 'last-mile delivery', 'logistech', 'logistics', 'delivery', 'fleet', 'shipping', 'freight'] },
+      { name: 'SpaceTech / DeepTech', keys: ['semiconductors', 'space', 'quantum', 'spacetech', 'deeptech', 'satellite', 'rocketry', 'isro', 'robotics'] },
+      { name: 'Gaming / Media', keys: ['gaming', 'media', 'esports', 'publisher', 'content creation', 'streaming', 'entertainment', 'influencer economy'] },
+      { name: 'Real Estate Tech', keys: ['proptech', 'construction tech', 'real estate', 'property', 'real estate tech', 'homebuying', 'coworking'] }
+    ];
 
-  const majorSources = [
-    { name: 'Inc42', keys: ['inc42'] },
-    { name: 'YourStory', keys: ['yourstory'] },
-    { name: 'Entrackr', keys: ['entrackr', 'entracker'] },
-    { name: 'Economic Times', keys: ['economic times', 'et auto', 'et tech'] },
-    { name: 'Moneycontrol', keys: ['moneycontrol'] },
-    { name: 'VCCircle', keys: ['vccircle'] },
-    { name: 'LiveMint', keys: ['livemint', 'mint'] },
-    { name: 'StartupTalky', keys: ['startuptalky'] },
-    { name: 'Entrepreneur India', keys: ['entrepreneur'] },
-    { name: 'The Ken', keys: ['the ken'] },
-    { name: 'Morning Context', keys: ['morning context'] },
-    { name: 'Finshots', keys: ['finshots'] },
-    { name: 'IndianStartupNews', keys: ['indianstartupnews', 'indian startup news'] },
-    { name: 'TICE News', keys: ['tice news', 'tice'] },
-    { name: 'StartupNews.fyi', keys: ['startupnews.fyi', 'startupnews'] }
-  ];
+    const signalCategories = [
+      { 
+        name: 'Funding',
+        priority: 1,
+        strong: ['raises', 'funding', 'fundraise', 'series a', 'series b', 'series c', 'pre-seed', 'seed round', 'raised', 'closes funding', 'investment from', 'valuation hits', 'valuation of', 'funding from', 'secures funding', 'bags funding', 'capital infusion', 'mops up', 'infuses capital', 'investment round', 'strategic investment'],
+        supporting: ['venture capital', 'vcs', 'investors', 'funding round', 'capital injection', 'equity', 'convertible note', 'debt funding', 'angel funding', 'bridge round', 'funding news', 'fund raise', 'checks into', 'capital raise', 'investment in', 'startup funding', 'equity financing']
+      },
+      { 
+        name: 'Startup Launch',
+        priority: 8,
+        strong: ['launches startup', 'founded in', 'new startup', 'debuts', 'coming out of stealth', 'stealth mode', 'founders start', 'unveils startup', 'enters the market', 'operational in'],
+        supporting: ['co-founded', 'venture launched', 'bootstrapped', 'early-stage', 'incorporated', 'new venture', 'spin-off', 'fresh off', 'starting up', 'new player', 'enters sector', 'commences ops']
+      },
+      {
+        name: 'Acquisition',
+        priority: 4,
+        strong: ['acquires', 'acquisition of', 'takeover', 'acqui-hire', 'merger with', '100% stake purchase', 'buys startup', 'purchase of'],
+        supporting: ['strategic acquisition', 'all-stock deal', 'asset purchase', 'takes over', 'absorbed by', 'majority stake', 'buyout', 'controlling interest', 'merger talk', 'valuation in acquisition']
+      },
+      {
+        name: 'Shutdown',
+        priority: 2,
+        strong: ['shuts down', 'ceases operations', 'closure of', 'bankruptcy', 'winding up', 'stops operations', 'halting operations'],
+        supporting: ['insolvency', 'nclt filing', 'no longer operational', 'suspends services', 'folds', 'winding down', 'end of operations', 'failure', 'out of business']
+      },
+      {
+        name: 'Layoffs',
+        priority: 3,
+        strong: ['layoffs', 'lays off', 'job cuts', 'retrenchment', 'downsizing', 'workforce reduction', 'mass layoff', 'slashes jobs'],
+        supporting: ['pink slips', 'let go', 'rightsizing', 'headcount reduction', 'employees fired', 'mass termination', 'cost cutting', 'redundancies', 'job losses']
+      },
+      {
+        name: 'Product Launch',
+        priority: 9,
+        strong: ['launches product', 'new feature', 'releases feature', 'unveils new', 'rolls out feature', 'rolls out', 'goes live', 'announces launch', 'beta launch', 'general availability', 'debuts new'],
+        supporting: ['releases', 'unveils', 'introduces', 'now available', 'v2.0', 'new offering', 'app update', 'platform expansion', 'new vertical', 'product reveal']
+      },
+      {
+        name: 'Founder Interview',
+        priority: 10,
+        strong: ['founder op-ed', 'founder profile', 'in conversation with', 'interview with founder', 'exclusive interview', 'founder exclusive', 'interview with ceo', 'founder speaks', 'co-founder says', 'q&a with'],
+        supporting: ['opinion', 'thought leadership', 'vision', 'roadmap', 'op-ed by', "founder's take", 'startup journey', 'lessons from', 'we sat down with', 'in their own words']
+      },
+      {
+        name: 'Pivot',
+        priority: 5,
+        strong: ['pivots', 'shifts focus to', 'new direction', 'pivoting to', 'pivoting from', 'business model change', 'strategic overhaul'],
+        supporting: ['restructures', 'reinvents', 'overhauls strategy', 'moves away from', 'no longer focuses on', 'transition to', 'rebrands as', 'sunsets', 'change of direction', 'new strategy']
+      },
+      {
+        name: 'Funding Ask',
+        priority: 6,
+        strong: ['in talks to raise', 'seeking investment', 'discussions with investors', 'looking to close', 'eyeing fundraise', 'plans to raise', 'seeking capital'],
+        supporting: ['approaching vcs', 'expected to close', 'term sheet', 'due diligence ongoing', 'roadshow', 'scouting investors', 'fundraising round planned', 'investor meetings', 'pitching to investors']
+      },
+      {
+        name: 'Revenue Milestone',
+        priority: 7,
+        strong: ['turns profitable', 'achieves breakeven', 'crosses arr', 'revenue milestone', 'ebitda positive', 'pat positive', 'clocks revenue'],
+        supporting: ['first profitable quarter', 'operating profit', 'mrr crosses', 'gmv milestone', 'revenue hits', 'clocks inr cr', 'gross profit positive', 'profitability achieved', 'revenue growth']
+      }
+    ];
+
+    const majorSources = [
+      { name: 'Inc42', keys: ['inc42'], logoUrl: 'https://www.google.com/s2/favicons?domain=inc42.com&sz=128' },
+      { name: 'YourStory', keys: ['yourstory'], logoUrl: 'https://www.google.com/s2/favicons?domain=yourstory.com&sz=128' },
+      { name: 'Entrackr', keys: ['entrackr', 'entracker'], logoUrl: 'https://www.google.com/s2/favicons?domain=entrackr.com&sz=128' },
+      { name: 'Economic Times', keys: ['economic times', 'et auto', 'et tech'], logoUrl: 'https://www.google.com/s2/favicons?domain=economictimes.indiatimes.com&sz=128' },
+      { name: 'Moneycontrol', keys: ['moneycontrol'], logoUrl: 'https://www.google.com/s2/favicons?domain=moneycontrol.com&sz=128' },
+      { name: 'VCCircle', keys: ['vccircle'], logoUrl: 'https://www.google.com/s2/favicons?domain=vccircle.com&sz=128' },
+      { name: 'LiveMint', keys: ['livemint', 'mint'], logoUrl: 'https://www.google.com/s2/favicons?domain=livemint.com&sz=128' },
+      { name: 'StartupTalky', keys: ['startuptalky'], logoUrl: 'https://www.google.com/s2/favicons?domain=startuptalky.com&sz=128' },
+      { name: 'Entrepreneur India', keys: ['entrepreneur'], logoUrl: 'https://www.google.com/s2/favicons?domain=entrepreneur.com&sz=128' },
+      { name: 'The Ken', keys: ['the ken'], logoUrl: 'https://www.google.com/s2/favicons?domain=the-ken.com&sz=128' },
+      { name: 'Morning Context', keys: ['morning context'], logoUrl: 'https://www.google.com/s2/favicons?domain=themorningcontext.com&sz=128' },
+      { name: 'Finshots', keys: ['finshots'], logoUrl: 'https://www.google.com/s2/favicons?domain=finshots.in&sz=128' },
+      { name: 'IndianStartupNews', keys: ['indianstartupnews', 'indian startup news'], logoUrl: 'https://www.google.com/s2/favicons?domain=indianstartupnews.com&sz=128' },
+      { name: 'TICE News', keys: ['tice news', 'tice'], logoUrl: 'https://www.google.com/s2/favicons?domain=tice.news&sz=128' },
+      { name: 'StartupNews.fyi', keys: ['startupnews.fyi', 'startupnews'], logoUrl: 'https://play-lh.googleusercontent.com/SI26dmhoYzDnpUoEm1pQpRECb8o6GKkUV8wOOnKWRSLVWdA6ln6Wshw1jHH-DNt0yg' }
+    ];
 
   const now = new Date();
   const oneYearAgo = new Date();
@@ -781,28 +873,75 @@ async function runDeepSync() {
             const creatorRaw = item.creator || item.author || 'Editorial Team';
             const contentBuffer = (item.title + ' ' + (item.contentSnippet || item.content || '')).toLowerCase();
             
-            // Auto-Classification Logic
-            const detectedIndustry = industryVerticals.find(v => 
-              v.keys.some(k => contentBuffer.includes(k))
-            )?.name || 'Other / Unclassified';
+            // Enhanced Thematic Routing Engine (Priority + Multi-Tag + Headline Tiebreaking)
+            const industryTags = [];
+            const signalMatches = [];
+            
+            const titleBuffer = (item.title || '').toLowerCase();
+            const descBuffer = (item.contentSnippet || item.content || '').toLowerCase();
+            const fullBuffer = (titleBuffer + ' ' + descBuffer);
+
+            // Vector 1: Industry Verticals (Priority Match)
+            const industryMatch = industryVerticals.find(v => v.keys.some(k => fullBuffer.includes(k)));
+            if (industryMatch) industryTags.push(industryMatch.name);
+
+            // Vector 2: Strategic Signal Acquisition (Rules 1, 2, 3)
+            signalCategories.forEach(sc => {
+              // Rule 3: Headline weighting - Does the trigger appear in the headline?
+              const inHeadline = sc.strong.some(k => titleBuffer.includes(k)) || 
+                               sc.supporting.filter(k => titleBuffer.includes(k)).length >= 2;
+              
+              const titleStrong = sc.strong.filter(k => titleBuffer.includes(k)).length;
+              const titleSupport = sc.supporting.filter(k => titleBuffer.includes(k)).length;
+              const bodyStrong = sc.strong.filter(k => descBuffer.includes(k)).length;
+              const bodySupport = sc.supporting.filter(k => descBuffer.includes(k)).length;
+
+              // Rule 2: Minimum Confidence threshold
+              if ((titleStrong + bodyStrong) >= 1 || (titleSupport + bodySupport) >= 2) {
+                signalMatches.push({
+                  name: sc.name,
+                  priority: sc.priority,
+                  isHeadlineSignal: inHeadline
+                });
+              }
+            });
+
+            // Rule 1 & 2 Execution: Sort by Priority & Headline weight, then Cap at 2
+            const topSignals = signalMatches
+              .sort((a, b) => {
+                if (a.isHeadlineSignal && !b.isHeadlineSignal) return -1;
+                if (!a.isHeadlineSignal && b.isHeadlineSignal) return 1;
+                return a.priority - b.priority;
+              })
+              .slice(0, 2)
+              .map(s => s.name);
+
+            const finalCategories = [...topSignals, ...industryTags];
+            if (finalCategories.length === 0) finalCategories.push('Other / Unclassified');
 
             let detectedSource = source.name;
-            const match = majorSources.find(ms => ms.keys.some(k => creatorRaw.toLowerCase().includes(k) || (item.title || '').toLowerCase().includes(k)));
-            if (match) detectedSource = match.name;
+            let logoUrl = source.logoUrl;
+            const match = majorSources.find(ms => ms.keys.some(k => creatorRaw.toLowerCase().includes(k) || titleBuffer.includes(k)));
+            if (match) {
+              detectedSource = match.name;
+              logoUrl = match.logoUrl;
+            }
 
             await prisma.discoveryCache.upsert({
               where: { link: item.link },
               update: {
-                categories: JSON.stringify([detectedIndustry])
+                categories: JSON.stringify(finalCategories),
+                logoUrl
               }, 
               create: {
                 title: item.title || 'Untitled Signal',
                 link: item.link,
                 pubDate: validDate,
-                content: (item.contentSnippet || item.content || '').substring(0, 5000),
+                content: descBuffer.substring(0, 5000),
                 author: creatorRaw,
                 source: detectedSource,
-                categories: JSON.stringify([detectedIndustry])
+                logoUrl,
+                categories: JSON.stringify(finalCategories)
               }
             }).catch(() => {});
           }

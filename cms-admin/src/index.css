@@ -1,11 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&family=JetBrains+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&family=Nunito:wght@500;600;700;800&family=JetBrains+Mono&display=swap');
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: "Inter", "system-ui", "-apple-system", "sans-serif";
+  --font-sans: "Nunito", "Inter", "system-ui", "-apple-system", "sans-serif";
   --font-serif: "Playfair Display", "serif";
   --font-mono: "JetBrains Mono", "monospace";
+  --font-brand: "Nunito", "sans-serif";
 }
 
 :root {
@@ -154,3 +155,12 @@ ul[data-type="taskList"] li > label {
   text-transform: uppercase;
 }
 
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

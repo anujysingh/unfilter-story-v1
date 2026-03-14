@@ -20,6 +20,9 @@ export default function Discovery() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [limit, setLimit] = useState(10)
   const [bookmarkedOnly, setBookmarkedOnly] = useState(false)
+  const [collapsed, setCollapsed] = useState({ signals: false, industries: false, sources: false, temporal: false })
+
+  const toggleCollapse = (section) => setCollapsed(prev => ({ ...prev, [section]: !prev[section] }))
 
   const fetchNews = async (isRefresh = false, pageNum = 1, isSync = false) => {
     if (isRefresh) setRefreshing(true)
@@ -94,12 +97,17 @@ export default function Discovery() {
   }
 
   useEffect(() => {
-    // If we're in custom mode, only auto-fetch when the 'limit' changes (not the dates)
-    // All other presets and filters (bookmarked, sources) trigger auto-fetch immediately.
+    // Sources, categories, and bookmark toggles trigger auto-fetch immediately.
+    // Date changes in 'custom' mode still require the 'APPLY' trigger to prevent partial fetches.
+    fetchNews(false, 1)
+  }, [bookmarkedOnly, selectedSources, selectedCategories])
+
+  // Presets trigger immediate fetch
+  useEffect(() => {
     if (dateFilter !== 'custom') {
       fetchNews(false, 1)
     }
-  }, [bookmarkedOnly, selectedSources, selectedCategories, dateFilter])
+  }, [dateFilter])
 
   // Limit change should always trigger re-fetch to maintain UX consistency
   useEffect(() => {
@@ -155,55 +163,33 @@ export default function Discovery() {
     alert(`Ready to import: ${item.title}\n\nThis would pre-fill the Article Editor with the RSS content and headline.`)
   }
 
-  const filteredNews = news.filter(item => {
-    // 1. Source Filter (Multi-select)
-    if (selectedSources.length > 0 && !selectedSources.includes(item.source)) return false
+  // Trust the backend 'Thematic Routing Engine' as the single source of truth
+  const filteredNews = news
 
-    // 1.1 Category Filter (Multi-select)
-    if (selectedCategories.length > 0) {
-      const itemCats = (item.categories || []).map(c => (c?.name || c).toLowerCase())
-      const hasMatch = selectedCategories.some(cat => itemCats.includes(cat.toLowerCase()))
-      if (!hasMatch) return false
-    }
-
-    // 2. Date Filter
-    const pubDate = new Date(item.pubDate)
-    const now = new Date()
-    
-    if (dateFilter === 'custom' && customDate) {
-      const selectedDate = new Date(customDate)
-      return pubDate.toDateString() === selectedDate.toDateString()
-    }
-    
-    if (dateFilter === '7d') {
-      const threshold = new Date()
-      threshold.setDate(threshold.getDate() - 7)
-      return pubDate >= threshold
-    }
-    
-    if (dateFilter === '15d') {
-      const threshold = new Date()
-      threshold.setDate(threshold.getDate() - 15)
-      return pubDate >= threshold
-    }
-
-    if (dateFilter === '30d') {
-      const threshold = new Date()
-      threshold.setDate(threshold.getDate() - 30)
-      return pubDate >= threshold
-    }
-
-    return true
-  })
+  // Signal Matrix Taxonomy (PRD v1.9)
+  const SIGNAL_TYPES = [
+    'Funding', 'Startup Launch', 'Acquisition', 'Shutdown', 'Layoffs', 
+    'Product Launch', 'Founder Interview', 'Pivot', 'Funding Ask', 'Revenue Milestone'
+  ]
 
   // Fixed Industry Taxonomy based on Business Intelligence Matrix
   const allCategories = [
+    ...SIGNAL_TYPES,
     'Fintech',
     'EdTech',
     'AI / ML',
     'HealthTech',
+    'MobilityTech',
+    'FoodTech',
+    'TravelTech',
+    'Cybersecurity',
+    'Web3 / Blockchain',
+    'ClimateTech / Sustainability',
     'AgriTech',
     'CleanTech / EV',
+    'Future of Work / HRTech',
+    'Developer Infrastructure / Cloud',
+    'Social / Community Platforms',
     'SaaS / B2B',
     'D2C / E-Commerce',
     'LogisTech',
@@ -213,373 +199,396 @@ export default function Discovery() {
   ]
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto pb-20">
-      {/* Header */}
-      <div className="flex justify-between items-end border-b border-gray-100 pb-10">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-[var(--cms-accent)] rounded-2xl flex items-center justify-center text-[var(--cms-accent-light)] shadow-xl shadow-[var(--cms-accent)]/20">
-              <Zap size={24} fill="currentColor" />
+    <div className="flex bg-[#F8F9FA] min-h-screen overflow-hidden">
+      {/* 🧭 Strategic Intelligence Sidebar */}
+      <div className="w-[340px] border-r border-gray-200 bg-white h-screen sticky top-0 flex flex-col shadow-2xl shadow-gray-200/50 z-20">
+        <div className="p-8 border-b border-gray-50 bg-gray-50/10">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-12 h-12 bg-black rounded-2xl flex items-center justify-center text-white shadow-xl shadow-black/10">
+              <Zap size={24} fill="currentColor" className="text-[var(--cms-accent-light)]" />
             </div>
             <div>
-              <span className="text-xs font-black text-[var(--cms-accent)] uppercase tracking-[0.3em]">Operational Intelligence</span>
-              <h1 className="text-[56px] font-black text-[var(--cms-accent)] tracking-tighter leading-none mt-1 font-serif italic">Discovery Engine</h1>
+              <h2 className="text-xl font-[900] tracking-tighter text-black leading-none">Discovery Intelligence</h2>
+              <p className="text-[9px] font-black text-gray-400 mt-1 uppercase tracking-[0.1em]">Intelligence Core v2.5</p>
             </div>
           </div>
-          <p className="text-lg font-medium text-[var(--cms-text-secondary)] tracking-tight max-w-2xl">
-            Real-time startup news aggregation from across the web. Monitor trends and import stories directly into your editorial pipeline.
-          </p>
         </div>
-        
-        <div className="flex gap-4">
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            className="px-6 py-4 bg-white border-2 border-[var(--cms-accent-light)] text-[var(--cms-accent)] font-extrabold text-sm rounded-2xl hover:bg-[var(--cms-accent-light)] transition-all flex items-center gap-3 tracking-widest shadow-sm"
-          >
-            <ListFilter size={18} />
-            Manage Sources
-          </button>
-          <button 
-            onClick={() => fetchNews(true, 1, true)}
-            disabled={refreshing}
-            className="px-8 py-4 bg-[var(--cms-accent)] text-white font-extrabold text-sm rounded-2xl shadow-[0_15px_40px_rgba(0,93,59,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center gap-3 tracking-widest disabled:opacity-50"
-          >
-            <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
-            {refreshing ? 'Synchronizing Intelligence...' : 'Live Sync'}
-          </button>
+        <div className="flex-1 overflow-y-auto p-7 space-y-10 custom-scrollbar pb-10">
+          {/* Section: Main Feed */}
+          <div className="space-y-4">
+             <h4 className="text-[10px] font-black text-gray-600/70 px-2 flex items-center justify-between">
+               Discover
+               <RefreshCw size={12} className={`cursor-pointer ${refreshing ? 'animate-spin' : ''}`} onClick={() => fetchNews(true, 1, true)} />
+             </h4>
+             <button
+               onClick={() => { setSelectedSources([]); setSelectedCategories([]); setBookmarkedOnly(false); setDateFilter('all'); }}
+               className="w-full h-12 flex items-center gap-3 px-4 rounded-xl bg-[var(--cms-accent-light)] border border-[var(--cms-accent)]/10 text-[var(--cms-accent)] text-[11px] font-black hover:scale-[1.02] transition-all"
+             >
+               <Globe size={14} /> Global Feed
+             </button>
+             <button
+               onClick={() => setBookmarkedOnly(!bookmarkedOnly)}
+               className={`w-full h-12 flex items-center gap-3 px-4 rounded-xl text-[11px] font-black transition-all border ${
+                 bookmarkedOnly
+                   ? 'bg-black text-white border-black shadow-lg shadow-black/20'
+                   : 'bg-white text-gray-700/80 border-gray-100 hover:border-gray-300 hover:text-black'
+               }`}
+             >
+               <Bookmark size={14} className={bookmarkedOnly ? 'fill-current' : ''} />
+               {bookmarkedOnly ? 'Active Bookmarks' : 'My Bookmarks'}
+             </button>
+          </div>
+
+          {/* Section: Temporal Intelligence */}
+          <div className="space-y-4 border-b border-gray-100 pb-6">
+             <h4 className="text-[11px] font-black text-gray-600/70 px-2 flex items-center justify-between cursor-pointer group" onClick={() => toggleCollapse('temporal')}>
+               Temporal Radius
+               <ChevronDown size={14} className={`transition-transform duration-300 ${collapsed.temporal ? '' : 'rotate-180'}`} />
+             </h4>
+             {!collapsed.temporal && (
+               <div className="grid grid-cols-1 gap-2 animate-in slide-in-from-top-2 duration-300">
+                 {['all', '24h', '48h', '7d', '15d', '3m', 'custom'].map(t => (
+                   <button 
+                     key={t}
+                     onClick={() => setDateFilter(t)}
+                     className={`h-11 text-left px-4 rounded-xl text-[10.5px] font-black border transition-all ${
+                       dateFilter === t 
+                         ? 'bg-gray-100 text-black border-gray-400 shadow-inner' 
+                         : 'bg-white text-gray-700/80 border-gray-100 hover:border-gray-300 hover:text-black'
+                     }`}
+                   >
+                     {t === 'all' ? 'Anytime Signals' : t === 'custom' ? '📅 Custom Frame' : `Last ${t.replace('h',' Hours').replace('d',' Days').replace('m',' Months')}`}
+                   </button>
+                 ))}
+                 
+                 {dateFilter === 'custom' && (
+                   <div className="space-y-2 mt-2 p-4 bg-gray-50 rounded-2xl border border-gray-200 animate-in slide-in-from-top-2 duration-300">
+                      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} max={new Date().toLocaleDateString('en-CA')} className="w-full p-3 bg-white border border-gray-300 rounded-xl text-[10px] font-black outline-none" />
+                      <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} max={new Date().toLocaleDateString('en-CA')} className="w-full p-3 bg-white border border-gray-300 rounded-xl text-[10px] font-black outline-none" />
+                      <button onClick={() => fetchNews(false, 1)} disabled={!startDate} className="w-full py-3 bg-[var(--cms-accent)] text-white text-[9.5px] font-black rounded-xl hover:bg-black transition-all disabled:opacity-30">Lock Temporal Frame</button>
+                   </div>
+                 )}
+               </div>
+             )}
+          </div>
+
+          {/* Section: Business Signals */}
+          <div className="space-y-4 border-b border-gray-100 pb-6">
+             <h4 className="text-[11px] font-black text-indigo-600 px-2 flex items-center justify-between cursor-pointer group" onClick={() => toggleCollapse('signals')}>
+               <span className="flex items-center gap-2">
+                 <Zap size={10} fill="currentColor" /> Startup Category
+               </span>
+               <div className="flex items-center gap-3">
+                 {!collapsed.signals && (
+                   <div className="flex items-center gap-2">
+                     <span 
+                       className="text-[8px] font-black text-indigo-500 cursor-pointer hover:underline" 
+                       onClick={(e) => { e.stopPropagation(); setSelectedCategories(prev => [...prev.filter(c => !SIGNAL_TYPES.includes(c)), ...SIGNAL_TYPES]); }}
+                     >
+                       ALL
+                     </span>
+                     <span className="text-gray-200">|</span>
+                     <span className="text-[8px] font-black text-indigo-500 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); setSelectedCategories(prev => prev.filter(c => !SIGNAL_TYPES.includes(c))); }}>CLR</span>
+                   </div>
+                 )}
+                 <ChevronDown size={14} className={`transition-transform duration-300 ${collapsed.signals ? '' : 'rotate-180'}`} />
+               </div>
+             </h4>
+             {!collapsed.signals && (
+               <div className="flex flex-wrap gap-2 animate-in slide-in-from-top-2 duration-300">
+                 {SIGNAL_TYPES.map(cat => (
+                   <button 
+                     key={cat}
+                     onClick={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
+                     className={`px-3 py-2.5 rounded-xl text-[10px] font-black border transition-all shadow-sm ${
+                       selectedCategories.includes(cat)
+                         ? 'bg-black text-white border-black shadow-lg shadow-black/20 scale-[1.05]'
+                         : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-200 hover:text-indigo-600'
+                     }`}
+                   >
+                     {cat}
+                   </button>
+                 ))}
+               </div>
+             )}
+          </div>
+
+          {/* Section: Industry Verticals */}
+          <div className="space-y-4 border-b border-gray-100 pb-6">
+             <h4 className="text-[11px] font-black text-gray-500 px-2 flex items-center justify-between cursor-pointer group" onClick={() => toggleCollapse('industries')}>
+               Industries
+               <div className="flex items-center gap-3">
+                 {!collapsed.industries && (
+                   <div className="flex items-center gap-3">
+                     <span 
+                       className="text-[8px] font-black text-indigo-500 cursor-pointer hover:underline" 
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         const industryList = allCategories.filter(cat => !SIGNAL_TYPES.includes(cat));
+                         setSelectedCategories(prev => [...prev.filter(c => SIGNAL_TYPES.includes(c)), ...industryList]);
+                       }}
+                     >
+                       ALL
+                     </span>
+                     <span className="text-gray-300">|</span>
+                     <span className="text-[8px] font-black text-indigo-500 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); setSelectedCategories(selectedCategories.filter(c => SIGNAL_TYPES.includes(c))); }}>CLR</span>
+                   </div>
+                 )}
+                 <ChevronDown size={14} className={`transition-transform duration-300 ${collapsed.industries ? '' : 'rotate-180'}`} />
+               </div>
+             </h4>
+             {!collapsed.industries && (
+               <div className="flex flex-wrap gap-2 animate-in slide-in-from-top-2 duration-300">
+                 {allCategories.filter(cat => !SIGNAL_TYPES.includes(cat)).map(cat => (
+                   <button 
+                     key={cat}
+                     onClick={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
+                     className={`px-3 py-2.5 rounded-xl text-[10px] font-black border transition-all ${
+                       selectedCategories.includes(cat)
+                         ? 'bg-[var(--cms-accent)] text-white border-[var(--cms-accent)] shadow-md'
+                         : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400 hover:text-black'
+                     }`}
+                   >
+                     {cat}
+                   </button>
+                 ))}
+               </div>
+             )}
+          </div>
+
+          {/* Section: News Perimeter */}
+          <div className="space-y-4">
+             <h4 className="text-[11px] font-black text-gray-700/80 px-2 flex items-center justify-between cursor-pointer group" onClick={() => toggleCollapse('sources')}>
+               News Perimeter
+               <div className="flex items-center gap-3">
+                 {!collapsed.sources && (
+                   <div className="flex items-center gap-3">
+                     <span 
+                       className="text-[8px] font-black text-indigo-500 cursor-pointer hover:underline" 
+                       onClick={(e) => { e.stopPropagation(); setSelectedSources(sources.map(s => s.name)); }}
+                     >
+                       ALL
+                     </span>
+                     <span className="text-gray-200">|</span>
+                     <span className="text-[8px] font-black text-indigo-500 cursor-pointer hover:underline" onClick={(e) => { e.stopPropagation(); setSelectedSources([]); }}>CLR</span>
+                   </div>
+                 )}
+                 <ChevronDown size={14} className={`transition-transform duration-300 ${collapsed.sources ? '' : 'rotate-180'}`} />
+               </div>
+             </h4>
+             {!collapsed.sources && (
+               <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                  {sources.map(src => (
+                    <label key={src.id} className="flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-xl hover:border-gray-400 transition-all cursor-pointer group/item">
+                      <div className="flex items-center gap-3">
+                        {src.logoUrl && <img src={src.logoUrl} alt="" className="w-5 h-5 rounded-md object-contain" />}
+                        <span className="text-[10.5px] font-black text-gray-800 tracking-tight">{src.name}</span>
+                      </div>
+                      <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-[var(--cms-accent)] focus:ring-[var(--cms-accent)]" checked={selectedSources.includes(src.name)} onChange={() => {
+                        setSelectedSources(prev => prev.includes(src.name) ? prev.filter(s => s !== src.name) : [...prev, src.name])
+                      }} />
+                    </label>
+                  ))}
+                  <button onClick={() => setIsModalOpen(true)} className="w-full py-4 border-2 border-dashed border-gray-200 rounded-xl text-[10px] font-black text-gray-500 hover:border-gray-400 hover:text-black transition-all">+ Manage Perimeters</button>
+               </div>
+             )}
+          </div>
+        </div>
+
+        {/* Sidebar Footer */}
+        <div className="p-8 border-t border-gray-100 bg-gray-50/30">
+           <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] font-black text-gray-700 tracking-tight">Page Density</span>
+              <select value={limit} onChange={e => setLimit(parseInt(e.target.value))} className="bg-transparent text-[11px] font-black text-black border-none outline-none cursor-pointer">
+                 <option value="10">LOW (10)</option>
+                 <option value="20">MID (20)</option>
+                 <option value="50">HIGH (50)</option>
+              </select>
+           </div>
+           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-[var(--cms-accent)] transition-all duration-500" style={{ width: `${(page / (pagination.totalPages || 1)) * 100}%` }}></div>
+           </div>
         </div>
       </div>
 
-      {/* Discovery Command Bar */}
-      <div className="bg-white p-8 rounded-[3rem] border border-gray-100 shadow-sm space-y-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Source Selection */}
-          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100/80">
-            <h4 className="text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-              <div className="p-1 rounded-md border border-gray-300"><div className="w-1.5 h-1.5 bg-gray-500 rounded-full"></div></div> News Perimeter Selection
-            </h4>
-            <div className="flex flex-wrap gap-3">
-              <button 
-                onClick={() => setSelectedSources([])}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all border ${
-                  selectedSources.length === 0 
-                    ? 'bg-[var(--cms-accent)] text-white border-[var(--cms-accent)] shadow-md' 
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 shadow-sm'
-                }`}
-              >
-                All Sources
-              </button>
-              {sources.map(src => (
-                <label 
-                  key={src.id}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold cursor-pointer transition-all border ${
-                    selectedSources.includes(src.name)
-                      ? 'bg-[var(--cms-accent-light)] text-[var(--cms-accent)] border-[var(--cms-accent)]/20 shadow-sm'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300 shadow-sm'
-                  }`}
-                >
-                  <input 
-                    type="checkbox"
-                    className="hidden"
-                    checked={selectedSources.includes(src.name)}
-                    onChange={() => {
-                      if (selectedSources.includes(src.name)) {
-                        setSelectedSources(selectedSources.filter(s => s !== src.name))
-                      } else {
-                        setSelectedSources([...selectedSources, src.name])
-                      }
-                    }}
-                  />
-                  <span>{src.name}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Category Selection */}
-          <div className="bg-white p-6 rounded-[2.5rem] border border-gray-100/80">
-            <h4 className="text-[11px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-              <Sparkles size={16} className="text-[var(--cms-accent)]" /> Industry Signal Matrix
-            </h4>
-            <div className="flex flex-wrap gap-3 max-h-[120px] overflow-y-auto pr-2 custom-scrollbar">
-              <button 
-                onClick={() => setSelectedCategories([])}
-                className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all border ${
-                  selectedCategories.length === 0 
-                    ? 'bg-[var(--cms-accent)] text-white border-[var(--cms-accent)] shadow-md' 
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 shadow-sm'
-                }`}
-              >
-                All Categories
-              </button>
-              {allCategories.map(cat => (
-                <label 
-                  key={cat}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black cursor-pointer transition-all border ${
-                    selectedCategories.includes(cat)
-                      ? 'bg-[var(--cms-accent)] text-white border-[var(--cms-accent)] shadow-md'
-                      : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
-                  }`}
-                >
-                  <input 
-                    type="checkbox"
-                    className="hidden"
-                    checked={selectedCategories.includes(cat)}
-                    onChange={() => {
-                      if (selectedCategories.includes(cat)) {
-                        setSelectedCategories(selectedCategories.filter(c => c !== cat))
-                      } else {
-                        setSelectedCategories([...selectedCategories, cat])
-                      }
-                    }}
-                  />
-                  <span>{cat.toUpperCase()}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Global Controls */}
-        {/* Global Filter Controls */}
-        <div className="flex flex-wrap items-center gap-4 border-t border-gray-50 pt-8">
-            <div className="bg-white p-1.5 rounded-3xl border border-gray-200 flex items-center gap-1 min-w-[200px]">
-               <button 
-                 onClick={() => setViewMode('grid')}
-                 className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${
-                   viewMode === 'grid' ? 'bg-gray-50 text-[var(--cms-accent)] shadow-sm' : 'text-gray-400 hover:text-black'
-                 }`}
-               >
-                 <LayoutGrid size={14} /> GRID
-               </button>
-               <button 
-                 onClick={() => setViewMode('list')}
-                 className={`flex-1 flex items-center justify-center gap-2.5 py-3 rounded-2xl text-[10px] font-black tracking-widest transition-all ${
-                   viewMode === 'list' ? 'bg-gray-50 text-[var(--cms-accent)] shadow-sm' : 'text-gray-400 hover:text-black'
-                 }`}
-               >
-                 <List size={14} /> LIST
-               </button>
-            </div>
-
-            <button 
-              onClick={() => setBookmarkedOnly(!bookmarkedOnly)}
-              className={`px-6 py-4 rounded-3xl text-[10px] font-black tracking-widest flex items-center gap-3 transition-all border ${
-                bookmarkedOnly 
-                  ? 'bg-[var(--cms-accent)] text-white border-[var(--cms-accent)] shadow-lg shadow-[var(--cms-accent)]/20' 
-                  : 'bg-white text-black border-gray-200 hover:bg-gray-50 shadow-sm'
-              }`}
-            >
-              <Bookmark size={14} className={bookmarkedOnly ? 'fill-current' : ''} />
-              BOOKMARKS
-            </button>
-
-            <div className="relative group w-52">
-              <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none text-black">
-                <Clock size={14} />
-              </div>
-              <select 
-                value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
-                className="w-full pl-12 pr-6 py-4 bg-white border border-gray-200 rounded-3xl text-[11px] font-black appearance-none cursor-pointer focus:ring-2 focus:ring-[var(--cms-accent)] transition-all uppercase tracking-[0.15em] shadow-sm text-black"
-              >
-                <option value="all">Anytime Signals</option>
-                <option value="24h">Last 24 Hours</option>
-                <option value="48h">Last 48 Hours</option>
-                <option value="7d">Last 7 Days</option>
-                <option value="15d">Last 15 Days</option>
-                <option value="3m">Last 3 Months</option>
-                <option value="custom">📅 Custom Calendar</option>
-              </select>
-              <ChevronDown size={14} className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
-            </div>
-
-            {dateFilter === 'custom' && (
-              <div className="flex items-center gap-2 animate-in slide-in-from-left-2 duration-300">
-                <input 
-                  type="date" 
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
-                  className="px-6 py-4 bg-white border border-gray-200 rounded-3xl text-[11px] font-black focus:ring-2 focus:ring-[var(--cms-accent)] transition-all uppercase tracking-widest shadow-sm outline-none"
-                />
-                <span className="text-gray-300 font-bold">to</span>
-                <input 
-                  type="date" 
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  max={new Date().toISOString().split('T')[0]}
-                  className="px-6 py-4 bg-white border border-gray-200 rounded-3xl text-[11px] font-black focus:ring-2 focus:ring-[var(--cms-accent)] transition-all uppercase tracking-widest shadow-sm outline-none"
-                />
+      {/* 🚀 Primary Signal Feed Area */}
+      <div className="flex-1 h-screen overflow-y-auto custom-scrollbar flex flex-col">
+        {/* Compact Header Bar */}
+        <header className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-100 px-12 py-6 flex items-center justify-between z-10 transition-all duration-300 hover:bg-white">
+          <div className="flex items-center gap-8">
+             <div className="bg-black text-[var(--cms-accent-light)] px-5 py-2 rounded-xl text-[11px] font-[900] tracking-tight shadow-lg">
+               DENSITY: {pagination.total} SIGNALS DETECTED
+             </div>
+             <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-200 shadow-sm">
                 <button 
-                  onClick={() => fetchNews(false, 1)}
-                  disabled={!startDate}
-                  className="px-6 py-4 bg-[var(--cms-accent)] text-white rounded-3xl text-[10px] font-black tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[var(--cms-accent)]/20 uppercase"
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-black shadow-sm' : 'text-gray-300 hover:text-gray-500'}`}
                 >
-                  Apply
+                  <LayoutGrid size={16} />
                 </button>
-              </div>
-            )}
-
-            <div className="relative group w-40">
-              <select 
-                value={limit}
-                onChange={(e) => setLimit(parseInt(e.target.value))}
-                className="w-full pl-6 pr-10 py-4 bg-white border border-gray-200 rounded-3xl text-[11px] font-black appearance-none cursor-pointer focus:ring-2 focus:ring-[var(--cms-accent)] transition-all uppercase tracking-[0.15em] shadow-sm text-black"
-              >
-                <option value="10">10 / Page</option>
-                <option value="20">20 / Page</option>
-                <option value="50">50 / Page</option>
-              </select>
-              <ChevronDown size={14} className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
-            </div>
-        </div>
-      </div>
-
-      {/* Standalone Navigation & Intelligence Bar (Start of Content) */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-10 py-6 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm">
-         <div className="flex items-center gap-1 bg-white p-1.5 rounded-3xl border border-gray-200 shadow-sm">
-            <button 
-              onClick={() => fetchNews(false, page - 1)}
-              disabled={page === 1 || loading}
-              className="p-3.5 bg-white text-gray-400 rounded-2xl hover:text-black disabled:opacity-20 transition-all border border-gray-100/50"
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <div className="px-8 text-[11px] font-black text-black uppercase tracking-[0.35em] whitespace-nowrap min-w-[170px] text-center">
-              PAGE {page} OF {pagination.totalPages}
-            </div>
-            <button 
-              onClick={() => fetchNews(false, page + 1)}
-              disabled={page === pagination.totalPages || loading}
-              className="p-3.5 bg-white text-gray-400 rounded-2xl hover:text-black disabled:opacity-20 transition-all border border-gray-100/50"
-            >
-              <ChevronRight size={18} />
-            </button>
-         </div>
-         
-         <div className="flex items-center gap-6">
-            <div className="px-10 py-4.5 bg-[#C9F775] rounded-[2rem] text-black font-black text-[11px] uppercase tracking-[0.2em] border-2 border-[#C9F775]/20 shadow-lg shadow-[#C9F775]/10 whitespace-nowrap flex items-center justify-center">
-              {pagination.total} TOTAL SIGNALS
-            </div>
-            <div className="hidden lg:flex px-8 py-4.5 bg-white rounded-[2rem] text-black font-black text-[10px] uppercase tracking-[0.15em] border border-gray-200 shadow-sm items-center justify-center">
-              {limit} SIGNALS PER DENSITY PLANE
-            </div>
-         </div>
-      </div>
-
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-32 gap-6 bg-white rounded-[4rem] border border-gray-100 shadow-sm">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-[var(--cms-accent-light)] rounded-full animate-ping absolute opacity-20"></div>
-            <Loader2 className="w-16 h-16 text-[var(--cms-accent)] animate-spin" />
+                <button 
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-black shadow-sm' : 'text-gray-300 hover:text-gray-500'}`}
+                >
+                  <List size={16} />
+                </button>
+             </div>
           </div>
-          <div className="text-center">
-            <h3 className="text-xl font-extrabold text-gray-900 tracking-tight">Accessing Satellite Feeds</h3>
-            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-2">Normalizing RSS streams for preview...</p>
+
+          <div className="flex items-center gap-4">
+             <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200 shadow-inner overflow-hidden">
+                <button 
+                  onClick={() => fetchNews(false, page - 1)}
+                  disabled={page === 1 || loading}
+                  className="p-2.5 bg-white text-gray-400 rounded-lg hover:text-black hover:bg-gray-50 disabled:opacity-10 transition-all font-black text-[9px]"
+                >
+                  PREV
+                </button>
+                <div className="px-5 text-[10px] font-black text-black tracking-[0.2em] whitespace-nowrap min-w-[120px] text-center">
+                  UNIT {page} / {pagination.totalPages}
+                </div>
+                <button 
+                  onClick={() => fetchNews(false, page + 1)}
+                  disabled={page === pagination.totalPages || loading}
+                  className="p-2.5 bg-white text-gray-400 rounded-lg hover:text-black hover:bg-gray-50 disabled:opacity-10 transition-all font-black text-[9px]"
+                >
+                  NEXT
+                </button>
+             </div>
+             <button 
+               onClick={() => fetchNews(true, 1, true)}
+               disabled={refreshing}
+               className="p-3 bg-[var(--cms-accent)] text-white rounded-xl shadow-lg shadow-[var(--cms-accent)]/20 hover:scale-105 active:scale-95 transition-all"
+               title="Emergency Signal Sync"
+             >
+               <RefreshCw size={18} className={refreshing ? 'animate-spin' : ''} />
+             </button>
           </div>
-        </div>
-      ) : filteredNews.length === 0 ? (
-        <div className="bg-white rounded-[4rem] border-2 border-dashed border-gray-100 p-32 text-center">
-          <Globe className="w-20 h-20 text-gray-100 mx-auto mb-8" />
-          <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-4">No Signals in Selected Perimeter</h2>
-          <p className="text-gray-400 font-bold text-sm max-w-sm mx-auto leading-relaxed uppercase tracking-widest">
-            Adjust your source or category filters to broaden the signal search.
-          </p>
-        </div>
-      ) : (
-        <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" : "flex flex-col gap-4"}>
-          {filteredNews.map((item, idx) => (
-            <div 
-              key={idx} 
-              className={`group bg-white rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex ${
-                viewMode === 'grid' ? 'flex-col hover:-translate-y-2' : 'flex-col sm:flex-row hover:bg-gray-50/10'
-              }`}
-            >
-              <div className={`${viewMode === 'grid' ? 'p-7' : 'p-6 sm:py-6 sm:px-8'} flex-1 ${viewMode === 'list' ? 'flex flex-col justify-center' : ''}`}>
-                <div className={`flex ${viewMode === 'grid' ? 'flex-col gap-4' : 'justify-between items-center'} mb-6`}>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-3 py-1 bg-[var(--cms-accent-light)] text-[var(--cms-accent)] rounded-lg text-[9px] font-black uppercase tracking-widest border border-[var(--cms-accent)]/10 shadow-sm">
-                      {item.source}
-                    </span>
-                    <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
-                      By {item.author || 'Editorial'}
-                    </span>
-                    {(item.categories || []).map((cat, ci) => (
-                      <span key={ci} className="px-3 py-1 bg-black text-white rounded-lg text-[9px] font-black uppercase tracking-widest border border-black shadow-sm">
-                        {cat}
-                      </span>
-                    ))}
+        </header>
+
+        {/* Content Pulse Grid */}
+        <main className="flex-1 p-12 max-w-7xl mx-auto w-full">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-48 gap-8 animate-in fade-in duration-500">
+               <div className="relative">
+                 <div className="w-24 h-24 border-4 border-indigo-100 rounded-full animate-ping absolute opacity-30"></div>
+                 <div className="w-24 h-24 border-4 border-t-[var(--cms-accent)] border-transparent rounded-full animate-spin"></div>
+                 <Zap className="absolute inset-0 m-auto text-[var(--cms-accent)] animate-pulse" size={32} />
+               </div>
+               <div className="text-center space-y-2">
+                 <h3 className="text-2xl font-black text-black tracking-tighter">Initializing Satellite Link</h3>
+                 <p className="text-[10px] font-bold text-gray-400 mt-1">Decoding multi-layered RSS payloads...</p>
+               </div>
+            </div>
+          ) : filteredNews.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-48 gap-6 opacity-40">
+               <Globe size={80} className="text-gray-200" />
+               <div className="text-center">
+                 <h2 className="text-2xl font-black text-gray-300 tracking-tighter">No Signals Captured</h2>
+                 <p className="text-[10px] font-bold text-gray-200 mt-2">Adjust your intelligence perimeter</p>
+               </div>
+            </div>
+          ) : (
+            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-10" : "flex flex-col gap-6"}>
+              {filteredNews.map((item, idx) => (
+                <div 
+                  key={idx} 
+                  className={`group bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:border-indigo-100 transition-all duration-700 overflow-hidden flex flex-col relative ${
+                    viewMode === 'grid' ? 'hover:-translate-y-3' : 'sm:flex-row min-h-[220px]'
+                  }`}
+                >
+                  {/* Visual Accent */}
+                  <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-[var(--cms-accent)] to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700" />
+                  
+                  <div className={`${viewMode === 'grid' ? 'p-10 pb-6' : 'p-10 flex-1'} flex flex-col`}>
+                    <div className="flex items-start justify-between mb-8">
+                        <div className="flex flex-wrap gap-2">
+                           {(item.logoUrl || item.source) && (
+                             <div className="h-8 px-4 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm overflow-hidden min-w-[60px]">
+                               <img 
+                                 src={item.logoUrl || `https://www.google.com/s2/favicons?domain=${item.source.toLowerCase().replace(/\s+/g, '')}${item.source.includes('.') ? '' : '.com'}&sz=128`} 
+                                 alt={item.source} 
+                                 className="h-4 w-auto object-contain transition-transform duration-500 group-hover:scale-110" 
+                                 onError={(e) => { 
+                                   if (!e.target.dataset.tried) {
+                                     e.target.dataset.tried = "1";
+                                     e.target.src = `https://www.google.com/s2/favicons?domain=${item.source.split('.')[0]}.com&sz=128`;
+                                   } else if (e.target.dataset.tried === "1") {
+                                     e.target.dataset.tried = "2";
+                                     e.target.src = `https://icon.horse/icon/${item.source.toLowerCase().replace(/\s+/g, '')}${item.source.includes('.') ? '' : '.com'}`;
+                                   } else {
+                                     e.target.style.display = 'none'; 
+                                     e.target.parentElement.innerHTML = `<span class="text-[10px] font-black text-indigo-400 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">${item.source}</span>`; 
+                                   }
+                                 }}
+                               />
+                             </div>
+                           )}
+                           <span className="px-3 py-1 bg-white text-gray-700 rounded-lg text-[10px] font-black border border-gray-200">
+                             {new Date(item.pubDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })}
+                           </span>
+                        </div>
+                        <button 
+                          onClick={(e) => { e.preventDefault(); toggleBookmark(item.id); }}
+                          className={`p-2.5 rounded-xl transition-all ${item.isBookmarked ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:text-black border border-gray-200'}`}
+                        >
+                          {item.isBookmarked ? <BookmarkCheck size={16} fill="currentColor" /> : <Bookmark size={16} />}
+                        </button>
+                    </div>
+
+                    <h3 className="text-xl font-[900] text-black tracking-tight leading-[1.2] mb-5 group-hover:text-indigo-600 transition-colors duration-500 font-brand">
+                      {item.title}
+                    </h3>
+                    
+                    <p className="text-[13.5px] font-semibold text-gray-700 line-clamp-2 leading-relaxed mb-8 opacity-80 group-hover:opacity-100 transition-all duration-500">
+                      {item.content?.replace(/<[^>]*>?/gm, '')}
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-3 mt-auto pt-6 border-t border-gray-50">
+                      {/* Signal Highlights: The Primary Intelligence Vector */}
+                      {(item.categories || []).filter(cat => SIGNAL_TYPES.includes(cat)).map((cat, i) => (
+                        <div key={`sig-${i}`} className="px-5 py-2.5 bg-black text-white text-[11px] font-black rounded-2xl flex items-center gap-3 border-2 border-indigo-500/30 shadow-xl shadow-indigo-500/10 animate-in zoom-in-95 duration-500">
+                          <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-pulse shadow-[0_0_12px_rgba(129,140,248,0.8)]" />
+                          {cat === 'Funding' ? '💰 ' + cat : cat === 'Acquisition' ? '🤝 ' + cat : cat === 'Shutdown' ? '🛑 ' + cat : cat}
+                        </div>
+                      ))}
+
+                      {/* Industry Footprints: The Secondary Context Vector */}
+                      {(item.categories || []).filter(cat => !SIGNAL_TYPES.includes(cat)).map((cat, i) => (
+                        <div key={`ind-${i}`} className="px-4 py-2 bg-gray-100 text-[10px] font-black text-gray-700 rounded-xl border border-gray-300">
+                          {cat}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className={`flex items-center gap-2 font-bold text-gray-900 ${viewMode === 'grid' ? 'text-[13px] border-t border-gray-50 pt-2' : 'text-[13px]'}`}>
-                    <Clock size={13} className="text-[var(--cms-accent)]" />
-                    <span className="tracking-tight">
-                      {new Date(item.pubDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-                    </span>
-                    <span className="text-gray-300">|</span>
-                    <span className="tracking-tight">
-                      {new Date(item.pubDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                    </span>
-                    <button 
-                      onClick={(e) => {
-                        e.preventDefault()
-                        toggleBookmark(item.id)
-                      }}
-                      className={`ml-auto p-2 rounded-xl transition-all ${
-                        item.isBookmarked 
-                          ? 'bg-[var(--cms-accent)] text-white shadow-lg' 
-                          : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600'
-                      }`}
+                  
+                  <div className={`p-6 bg-gray-50/40 border-t border-gray-100 flex gap-3 ${
+                    viewMode === 'grid' ? '' : 'sm:border-t-0 sm:border-l sm:w-56 flex-col justify-center'
+                  }`}>
+                          <a 
+                      href={item.link} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex-1 h-12 bg-white border border-gray-300 text-black font-black text-[11px] rounded-2xl hover:bg-black hover:text-white hover:border-black transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
                     >
-                      {item.isBookmarked ? <BookmarkCheck size={14} fill="currentColor" /> : <Bookmark size={14} />}
+                      <ExternalLink size={12} />
+                      Voice
+                    </a>
+                    <button 
+                      onClick={() => handleImport(item)}
+                      className="flex-1 h-12 bg-black text-white font-black text-[11px] rounded-2xl hover:scale-[1.05] shadow-xl shadow-black/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                    >
+                      <Send size={12} className="text-indigo-400" />
+                      Inject
                     </button>
                   </div>
                 </div>
-                
-                <h3 className={`${viewMode === 'grid' ? 'text-xl' : 'text-lg'} font-black text-gray-900 tracking-tight leading-tight mb-4 group-hover:text-[var(--cms-accent)] transition-colors duration-300 font-serif`}>
-                  {item.title}
-                </h3>
-                
-                <p className={`text-[13px] font-medium text-gray-500 ${viewMode === 'grid' ? 'line-clamp-3' : 'line-clamp-2'} leading-relaxed mb-6`}>
-                  {item.content?.replace(/<[^>]*>?/gm, '')}
-                </p>
-
-                <div className="flex flex-wrap gap-2">
-                  {(item.categories || []).slice(0, 3).map((cat, i) => (
-                    <span key={i} className="px-2 py-0.5 bg-gray-50 text-[8px] font-black text-gray-400 uppercase tracking-widest rounded border border-gray-100">
-                      #{cat?.name || cat}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              
-              <div className={`p-4 bg-gray-50/10 border-t sm:border-t-0 sm:border-l border-gray-50 flex ${
-                viewMode === 'grid' ? 'gap-2 justify-between' : 'flex-col gap-2 w-full sm:w-48 justify-center'
-              }`}>
-                <a 
-                  href={item.link} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex-1 py-3.5 bg-[var(--cms-accent)] text-white font-black text-[9px] rounded-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 tracking-[0.15em] shadow-lg shadow-[var(--cms-accent)]/20 uppercase active:scale-95"
-                >
-                  <ExternalLink size={12} />
-                  VISIT SOURCE
-                </a>
-                <button 
-                  onClick={() => handleImport(item)}
-                  className="flex-1 py-3.5 bg-[var(--cms-accent-light)] text-[var(--cms-accent)] font-black text-[9px] rounded-xl hover:scale-[1.02] shadow-lg shadow-[var(--cms-accent-light)]/30 transition-all flex items-center justify-center gap-2 tracking-[0.15em] uppercase active:scale-95 border border-[var(--cms-accent)]/10"
-                >
-                  <Send size={12} />
-                  IMPORT DRAFT
-                </button>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Bottom Padding */}
-      <div className="h-20" />
+          )}
+          <div className="h-20" />
+        </main>
+      </div>
 
       {/* Manage Sources Modal */}
       {isModalOpen && (
@@ -589,7 +598,7 @@ export default function Discovery() {
             <div className="p-12 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
               <div>
                 <h2 className="text-4xl font-extrabold text-gray-900 tracking-tighter mb-2">RSS Sources</h2>
-                <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.3em]">Configure your discovery perimeter</p>
+                <p className="text-[10px] text-gray-400 font-extrabold pb-2">Configure your discovery perimeter</p>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="p-4 bg-white text-gray-400 rounded-2xl hover:bg-gray-50 shadow-sm border border-gray-100 transition-all"><RefreshCw size={24} className="rotate-45" /></button>
             </div>
@@ -597,26 +606,26 @@ export default function Discovery() {
             <div className="p-12 space-y-10 max-h-[60vh] overflow-y-auto custom-scrollbar">
               {/* Add New Source */}
               <form onSubmit={handleAddSource} className="bg-[var(--cms-accent-light)]/30 p-8 rounded-[3rem] border border-[var(--cms-accent)]/5 space-y-6 shadow-inner">
-                <h4 className="text-xs font-black text-[var(--cms-accent)] uppercase tracking-[0.3em] ml-1">Connect New Remote Signal</h4>
+                <h4 className="text-xs font-extrabold text-[var(--cms-accent)] ml-1">Connect New Remote Signal</h4>
                 <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Source Identifier</label>
+                    <label className="text-[10px] font-extrabold text-gray-400 ml-1">Source Identifier</label>
                     <input 
                       required
                       type="text" 
                       placeholder="e.g. TechCrunch"
-                      className="w-full px-7 py-5 bg-white border-2 border-transparent rounded-[2rem] text-sm font-bold shadow-sm focus:border-[var(--cms-accent)] transition-all outline-none"
+                      className="w-full px-7 py-5 bg-white border-2 border-transparent rounded-[2rem] text-sm font-medium shadow-sm focus:border-[var(--cms-accent)] transition-all outline-none"
                       value={newSource.name}
                       onChange={e => setNewSource({...newSource, name: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">XML Endpoint URL</label>
+                    <label className="text-[10px] font-extrabold text-gray-400 ml-1">XML Endpoint URL</label>
                     <input 
                       required
                       type="url" 
                       placeholder="https://example.com/feed/"
-                      className="w-full px-7 py-5 bg-white border-2 border-transparent rounded-[2rem] text-sm font-bold shadow-sm focus:border-[var(--cms-accent)] transition-all outline-none"
+                      className="w-full px-7 py-5 bg-white border-2 border-transparent rounded-[2rem] text-sm font-medium shadow-sm focus:border-[var(--cms-accent)] transition-all outline-none"
                       value={newSource.url}
                       onChange={e => setNewSource({...newSource, url: e.target.value})}
                     />
@@ -624,26 +633,26 @@ export default function Discovery() {
                 </div>
                 <button 
                   type="submit"
-                  className="w-full py-5 bg-[var(--cms-accent)] text-white font-extrabold text-xs rounded-[2rem] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 tracking-[0.3em] uppercase"
+                  className="w-full py-5 bg-[var(--cms-accent)] text-white font-extrabold text-xs rounded-[2rem] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
                 >
                   <Plus size={20} />
-                  ACTIVATE REMOTE FEED
+                  Activate Remote Feed
                 </button>
               </form>
 
               {/* Current Sources */}
               <div className="space-y-6">
-                <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Active Intelligence Grid</h4>
+                <h4 className="text-[10px] font-extrabold text-gray-400 ml-1">Active Intelligence Grid</h4>
                 <div className="grid grid-cols-1 gap-4">
                   {sources.map(src => (
                     <div key={src.id} className="flex items-center justify-between p-6 bg-white border border-gray-100 rounded-[2.5rem] hover:border-[var(--cms-accent)]/20 shadow-sm group transition-all">
                       <div className="flex items-center gap-5">
-                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-[var(--cms-accent)] text-lg font-black italic shadow-inner border border-gray-100">
+                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-[var(--cms-accent)] text-lg font-extrabold shadow-inner border border-gray-100">
                           {src.name.charAt(0)}
                         </div>
                         <div>
                           <p className="font-extrabold text-gray-900 tracking-tight text-lg">{src.name}</p>
-                          <p className="text-[10px] font-mono text-gray-300 truncate max-w-[280px] uppercase tracking-tighter">{src.url}</p>
+                          <p className="text-[10px] font-mono text-gray-300 truncate max-w-[280px] tracking-tighter">{src.url}</p>
                         </div>
                       </div>
                       <button 
@@ -661,9 +670,9 @@ export default function Discovery() {
             <div className="p-12 bg-gray-50/50 border-t border-gray-100">
               <button 
                 onClick={() => setIsModalOpen(false)}
-                className="w-full py-6 bg-white border border-gray-200 text-gray-400 font-black text-xs rounded-[2rem] shadow-sm hover:bg-gray-100 transition-all uppercase tracking-[0.4em] active:scale-95"
+                className="w-full py-6 bg-white border border-gray-200 text-gray-400 font-extrabold text-xs rounded-[2rem] shadow-sm hover:bg-gray-100 transition-all active:scale-95"
               >
-                DISCONNECT CONSOLE
+                Disconnect Console
               </button>
             </div>
           </div>
