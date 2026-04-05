@@ -1046,7 +1046,7 @@ async function runDeepSync() {
         name: 'Founder Story / Profile',
         priority: 10,
         strong: ['founder op-ed', 'founder profile', 'in conversation with', 'interview with founder', 'exclusive interview', 'founder exclusive', 'interview with ceo', 'founder speaks', 'co-founder says', 'q&a with', 'story of', 'how it started'],
-        supporting: ['opinion', 'thought leadership', 'vision', 'roadmap', 'op-ed by', "founder's take", 'startup journey', 'lessons from', 'we sat down with', 'in their own words', 'built', 'started by', 'founder story', 'founder', 'ceo', 'entrepreneur', 'co-founder']
+        supporting: ['opinion', 'thought leadership', 'vision', 'roadmap', 'op-ed by', "founder's take", 'startup journey', 'lessons from', 'we sat down with', 'in their own words', 'built', 'started by', 'founder story']
       },
       {
         name: 'Pivot',
