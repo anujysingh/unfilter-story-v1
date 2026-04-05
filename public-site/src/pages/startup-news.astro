@@ -1,0 +1,97 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+let newsItems = [];
+let errorMsg = null;
+
+try {
+  // Fetch latest 20 RSS news items from the local backend
+  const response = await fetch('http://localhost:3000/cms/v1/rss/fetch?limit=20');
+  if (response.ok) {
+    const data = await response.json();
+    newsItems = data.items || [];
+  } else {
+    errorMsg = `Failed to fetch: ${response.statusText}`;
+  }
+} catch (e) {
+  console.error("Failed to fetch RSS news:", e.message);
+  errorMsg = "Could not connect to the backend to fetch news.";
+}
+---
+
+<Layout title="Startup News | Unfilter Story">
+  <Header />
+  
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 lg:py-12">
+    <div class="mb-10 text-center">
+      <h1 class="text-4xl md:text-5xl font-playfair font-black text-[#1A1A2E] mb-4">Startup News Feed</h1>
+      <p class="text-gray-500 font-inter text-lg max-w-2xl mx-auto">
+        Real-time, unfiltered news curated from top startup and business sources across the web.
+      </p>
+    </div>
+
+    {errorMsg && (
+      <div class="bg-red-50 text-red-700 p-4 rounded-lg mb-8 text-center font-inter">
+        {errorMsg}
+      </div>
+    )}
+
+    {newsItems.length === 0 && !errorMsg ? (
+      <div class="text-center py-20 bg-gray-50 rounded-2xl border border-gray-200">
+        <h3 class="text-2xl font-playfair text-gray-500 mb-2">No news found right now.</h3>
+        <p class="font-inter text-sm text-gray-400">The RSS syncer might still be fetching data in the background.</p>
+      </div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {newsItems.map((item) => (
+          <article class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300 flex flex-col pt-1">
+            
+            <div class="px-6 pt-5 pb-3">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center space-x-2">
+                  {item.logoUrl ? (
+                    <img src={item.logoUrl} alt={item.source} class="w-5 h-5 rounded-sm" />
+                  ) : (
+                    <div class="w-5 h-5 bg-gray-200 rounded-sm"></div>
+                  )}
+                  <span class="text-xs font-bold text-gray-600 font-inter uppercase tracking-wide">{item.source || 'Unknown Source'}</span>
+                </div>
+                <span class="text-xs text-gray-400 font-inter">
+                  {new Date(item.pubDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                </span>
+              </div>
+              
+              <h2 class="text-xl font-bold font-playfair text-[#1A1A2E] leading-tight mb-3 hover:text-[#E94560] transition-colors">
+                <a href={item.link} target="_blank" rel="noopener noreferrer">
+                  {item.title}
+                </a>
+              </h2>
+              
+              <div 
+                class="text-sm text-gray-600 font-inter line-clamp-3 mb-4 prose prose-sm max-w-none"
+                set:html={item.content || 'Click to read more on the source website...'}
+              />
+            </div>
+            
+            <div class="mt-auto px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+              <div class="flex gap-2">
+                {(item.categories || []).slice(0, 2).map((cat) => (
+                  <span class="text-[10px] uppercase tracking-wider font-semibold text-[#E94560] bg-[#FEF2F2] px-2 py-1 rounded-sm">
+                    {cat}
+                  </span>
+                ))}
+              </div>
+              <a href={item.link} target="_blank" rel="noopener noreferrer" class="text-sm font-medium font-inter text-[#E94560] hover:text-[#C73652] transition-colors ml-auto">
+                Read full →
+              </a>
+            </div>
+          </article>
+        ))}
+      </div>
+    )}
+  </main>
+
+  <Footer />
+</Layout>

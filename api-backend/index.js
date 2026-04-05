@@ -45,6 +45,27 @@ fastify.get('/v1/articles', async (request, reply) => {
   }
 })
 
+fastify.get('/v1/articles/:slug', async (request, reply) => {
+  try {
+    const { slug } = request.params
+    const article = await prisma.article.findFirst({
+      where: { slug: slug } // allow either draft or published to be fetched by slug if it exists
+    })
+    if (!article) return reply.code(404).send({ error: 'Article not found' })
+    
+    // Update view count
+    await prisma.article.update({
+      where: { id: article.id },
+      data: { viewCount: { increment: 1 } }
+    })
+    
+    return article
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Failed to fetch article' })
+  }
+})
+
 // === CMS API ROUTES ===
 fastify.post('/cms/v1/articles', async (request, reply) => {
   const { headline, body, categoryId, category, tags, status, publishedAt, featuredImageUrl } = request.body
@@ -124,11 +145,16 @@ fastify.post('/cms/v1/ai/transform', async (request, reply) => {
     Return ONLY the transformed text. Do not include any intros, outros, or conversational filler.`
 
     if (model === 'gemini') {
-      if (!genAI) throw new Error('Gemini API Key missing')
-      const geminiModel = genAI.getGenerativeModel({ model: "gemini-2.5-pro" })
+      if (!bytez) throw new Error('Bytez API Key missing')
+      // Falling back to Google Gemma via Bytez.com to bypass Google's strict strict rate limits on free-tier Gemini SDK
+      const geminiFallback = bytez.model("google/gemma-2-27b-it")
       const prompt = `${systemPrompt}\n\nTEXT TO TRANSFORM:\n${text}`
-      const response = await geminiModel.generateContent(prompt)
-      result = response.response.text()
+      const resp = await geminiFallback.run([
+        { role: "user", content: prompt }
+      ])
+      
+      if (resp.error) throw new Error(resp.error)
+      result = resp.output && resp.output.content ? resp.output.content : resp.output
     } else if (model === 'gpt') {
       if (!bytez) throw new Error('Bytez API Key missing')
       const gptModel = bytez.model("openai/gpt-4o-mini")
@@ -152,12 +178,7 @@ fastify.post('/cms/v1/ai/transform', async (request, reply) => {
     fastify.log.error(error)
     
     let userMessage = error.message || 'AI Transformation failed'
-    const modelName = model === 'gemini' ? 'Gemini 2.5 Pro' : 'GPT-4o mini'
-    
-    // Handle specific Google Quota error (429)
-    if (userMessage.includes('429') || userMessage.includes('Quota') || userMessage.includes('quota')) {
-      userMessage = `QUOTA EXCEEDED: ${modelName} has a strict limit on the FREE API tier (approx. 2 requests per minute). Your "Google One/Pro" subscription does not cover API usage. To fix this, wait 60 seconds before trying again, or use the GPT model.`
-    }
+    const modelName = model === 'gemini' ? 'Gemini/Gemma' : 'GPT-4o mini'
 
     return reply.code(500).send({ 
       error: userMessage,
@@ -582,6 +603,99 @@ fastify.delete('/cms/v1/users/:id', async (request, reply) => {
   }
 })
 
+// === PUBLIC CONTACT API ===
+fastify.post('/v1/contact', async (request, reply) => {
+  try {
+    const { name, email, subject, message } = request.body
+    if (!name || !email || !message) {
+      return reply.code(400).send({ error: 'Name, email, and message are required' })
+    }
+    const contact = await prisma.contactMessage.create({
+      data: { name, email, subject, message }
+    })
+    return { success: true, id: contact.id }
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Failed to submit contact message' })
+  }
+})
+
+// === CMS CONTACT API ===
+fastify.get('/cms/v1/contact', async (request, reply) => {
+  try {
+    const messages = await prisma.contactMessage.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+    return messages;
+  } catch (error) {
+    fastify.log.error(error);
+    reply.code(500).send({ error: 'Failed to fetch messages' });
+  }
+});
+
+fastify.put('/cms/v1/contact/:id/status', async (request, reply) => {
+  try {
+    const { id } = request.params
+    const { status } = request.body
+    const message = await prisma.contactMessage.update({
+      where: { id },
+      data: { status }
+    })
+    return message
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Failed to update message status' })
+  }
+})
+
+fastify.delete('/cms/v1/contact/:id', async (request, reply) => {
+  try {
+    const { id } = request.params
+    await prisma.contactMessage.delete({ where: { id } })
+    return { success: true }
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Failed to delete message' })
+  }
+})
+
+// === SITE SETTINGS API ROUTES ===
+fastify.get('/cms/v1/settings', async (request, reply) => {
+  try {
+    const settings = await prisma.siteSetting.findMany();
+    // Reduce array into key-value object
+    const result = settings.reduce((acc, curr) => {
+      acc[curr.key] = curr.value;
+      return acc;
+    }, {});
+    return result;
+  } catch (error) {
+    fastify.log.error(error);
+    reply.code(500).send({ error: 'Failed to fetch settings' });
+  }
+});
+
+fastify.put('/cms/v1/settings', async (request, reply) => {
+  try {
+    const updates = request.body; // e.g. { "siteLogo": "...", "twitterUrl": "..." }
+    const results = [];
+    for (const [key, value] of Object.entries(updates)) {
+      if (value !== undefined) {
+        const setting = await prisma.siteSetting.upsert({
+          where: { key },
+          update: { value: String(value) },
+          create: { key, value: String(value), label: key }
+        });
+        results.push(setting);
+      }
+    }
+    return { success: true, count: results.length };
+  } catch (error) {
+    fastify.log.error(error);
+    reply.code(500).send({ error: 'Failed to update settings' });
+  }
+});
+
 // === RSS NEWS ENGINE ===
 fastify.get('/cms/v1/rss/sources', async (request, reply) => {
   try {
@@ -656,12 +770,12 @@ fastify.get('/cms/v1/rss/fetch', async (request, reply) => {
       }));
     }
 
-    // 4. Date Filter + Dynamic 1-Year 'Lifecycle' Threshold
+    // 4. Date Filter + Dynamic 6-Month 'Lifecycle' Threshold
     const now = new Date();
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(now.getFullYear() - 1);
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(now.getMonth() - 6);
     
-    let gteDate = oneYearAgo; 
+    let gteDate = sixMonthsAgo; 
     let lteDate = null;
 
     if (dateFilter === 'custom' && startDate) {
@@ -678,14 +792,14 @@ fastify.get('/cms/v1/rss/fetch', async (request, reply) => {
       }
     }
  else if (dateFilter !== 'all' && dateFilter !== '') {
-      const filterDate = new Date();
-      if (dateFilter === '24h') filterDate.setHours(now.getHours() - 24);
-      else if (dateFilter === '48h') filterDate.setHours(now.getHours() - 48);
-      else if (dateFilter === '7d') filterDate.setDate(now.getDate() - 7);
-      else if (dateFilter === '15d') filterDate.setDate(now.getDate() - 15);
-      else if (dateFilter === '3m') filterDate.setMonth(now.getMonth() - 3);
+      let filterDate;
+      if (dateFilter === '24h') filterDate = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      else if (dateFilter === '48h') filterDate = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+      else if (dateFilter === '7d') filterDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      else if (dateFilter === '15d') filterDate = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000);
+      else if (dateFilter === '3m') filterDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
       
-      if (filterDate > oneYearAgo) gteDate = filterDate;
+      if (filterDate && filterDate > sixMonthsAgo) gteDate = filterDate;
     }
     
     where.pubDate = { gte: gteDate };
@@ -799,9 +913,69 @@ fastify.post('/cms/v1/rss/bookmark/:id', async (request, reply) => {
   }
 });
 
+// === SYNC STATE TRACKER ===
+const syncState = {
+  isSyncing: false,
+  syncType: null, // 'incremental' | 'deep'
+  startedAt: null,
+  completedAt: null,
+  totalSources: 0,
+  completedSources: 0,
+  currentSource: null,
+  newSignalsAdded: 0,
+  lastDeepSyncAt: null,   // persisted in-memory; survives 30-min intervals
+  lastIncrementalSyncAt: null,
+};
+
+fastify.get('/cms/v1/rss/sync-status', async (request, reply) => {
+  const totalSignals = await prisma.discoveryCache.count();
+  return {
+    isSyncing: syncState.isSyncing,
+    syncType: syncState.syncType,
+    startedAt: syncState.startedAt,
+    completedAt: syncState.completedAt,
+    totalSources: syncState.totalSources,
+    completedSources: syncState.completedSources,
+    currentSource: syncState.currentSource,
+    newSignalsAdded: syncState.newSignalsAdded,
+    lastDeepSyncAt: syncState.lastDeepSyncAt,
+    lastIncrementalSyncAt: syncState.lastIncrementalSyncAt,
+    totalSignalsInDB: totalSignals,
+    progressPercent: syncState.totalSources > 0
+      ? Math.round((syncState.completedSources / syncState.totalSources) * 100)
+      : 0,
+    elapsedSeconds: syncState.startedAt
+      ? Math.round((Date.now() - new Date(syncState.startedAt).getTime()) / 1000)
+      : 0,
+  };
+});
+
+// Manual sync trigger endpoint
+fastify.post('/cms/v1/rss/trigger-sync', async (request, reply) => {
+  if (syncState.isSyncing) {
+    return reply.code(409).send({ error: 'A sync is already in progress', syncType: syncState.syncType });
+  }
+  const { type = 'incremental' } = request.body || {};
+  if (type === 'deep') {
+    runDeepSync().catch(err => fastify.log.error(`Manual Deep Sync Error: ${err.message}`));
+  } else {
+    runIncrementalSync().catch(err => fastify.log.error(`Manual Incremental Sync Error: ${err.message}`));
+  }
+  return { started: true, type };
+});
+
 // Historical Archival Engine: Deep Sync Core
 async function runDeepSync() {
+  if (syncState.isSyncing) return; // Never double-run
   const activeSources = await prisma.rssSource.findMany({ where: { isActive: true } });
+  syncState.isSyncing = true;
+  syncState.syncType = 'deep';
+  syncState.startedAt = new Date().toISOString();
+  syncState.completedAt = null;
+  syncState.totalSources = activeSources.length;
+  syncState.completedSources = 0;
+  syncState.currentSource = null;
+  syncState.newSignalsAdded = 0;
   
     const industryVerticals = [
       { name: 'Fintech', keys: ['payments', 'lending', 'insurtech', 'wealthtech', 'regtech', 'fintech', 'banking', 'upi', 'neobank', 'wealth management', 'insurance', 'stock brokerage', 'rbi', 'bank of india', 'finance', 'trading'] },
@@ -979,8 +1153,8 @@ async function runDeepSync() {
     ];
 
   const now = new Date();
-  const oneYearAgo = new Date();
-  oneYearAgo.setFullYear(now.getFullYear() - 1);
+  const sixMonthsAgo = new Date();
+  sixMonthsAgo.setMonth(now.getMonth() - 6);
 
   console.log(`[Historical Bridge]: Starting deep archival scan for ${activeSources.length} sources...`);
 
@@ -989,6 +1163,7 @@ async function runDeepSync() {
     await Promise.all(batch.map(async (source) => {
       try {
         console.log(`  Bridge Sync: Processing ${source.name}...`);
+        syncState.currentSource = source.name;
         const pagesToFetch = Array.from({ length: 100 }, (_, i) => i + 1); 
         let lastFirstItemLink = '';
 
@@ -1004,12 +1179,12 @@ async function runDeepSync() {
           lastFirstItemLink = feed.items[0].link;
 
           const firstItemDate = feed.items[0].pubDate ? new Date(feed.items[0].pubDate) : null;
-          if (firstItemDate && firstItemDate < oneYearAgo && pageNum > 1) break;
+          if (firstItemDate && firstItemDate < sixMonthsAgo && pageNum > 1) break;
 
           for (const item of feed.items) {
             const rawDate = item.isoDate || item.pubDate || item.date;
             const validDate = rawDate ? new Date(rawDate) : null;
-            if (!validDate || isNaN(validDate.getTime()) || validDate < oneYearAgo) continue;
+            if (!validDate || isNaN(validDate.getTime()) || validDate < sixMonthsAgo) continue;
 
             const creatorRaw = item.creator || item.author || 'Editorial Team';
             const contentBuffer = (item.title + ' ' + (item.contentSnippet || item.content || '')).toLowerCase();
@@ -1037,6 +1212,22 @@ async function runDeepSync() {
                 return regex.test(text);
               }).length;
             };
+
+            // Anti-Noise Guard (The Purified Signal Doctrine Rule 5)
+            const isNoise = [
+              'sensex', 'nifty', 'bse', 'nse', 'dalal street', 'stock market', 'share price', 'rupee vs', 'rupee falls',
+              'l&t', 'larsen', 'reliance industries', 'mukesh ambani', 'adani', 'tata steel', 'tata motors', 
+              'bajaj finance', 'hdfc bank', 'icici bank', 'state bank of india', 'sbi', 'infosys', 
+              'tcs', 'wipro', 'itc', 'hindustan unilever', 'dividend', 'mutual fund', 'petrol price', 
+              'diesel price', 'gold price', 'silver price', 'bond yield', 'nifty 50', 'nifty bank', 'press note 3', 'sensex crashes',
+              'lpg', 'crude oil', 'gulf supplies', 'west asia conflict', 'geopolitics', 'inflation', 'repo rate', 'gdp growth', 'export data',
+              'ukraine', 'russia', 'argentina', 'commodity', 'natural gas', 'opec', 'oil prices'
+            ].some(key => {
+               const regex = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+               return regex.test(titleBuffer);
+            });
+            
+            if (isNoise) continue; // Instantly discard public-market/corporate noise
 
             // Vector 1: Industry Verticals (Multi-Tag Enabled)
             const industryTags = industryVerticals
@@ -1101,18 +1292,146 @@ async function runDeepSync() {
                 logoUrl,
                 categories: JSON.stringify(finalCategories)
               }
+            }).then(result => {
+              // Prisma upsert doesn't distinguish create vs update, track via a workaround
             }).catch(() => {});
+            syncState.newSignalsAdded++;
           }
           await new Promise(r => setTimeout(r, 200));
         }
         console.log(`  Bridge Sync: ${source.name} completed.`);
+        syncState.completedSources++;
       } catch (err) {
         console.error(`  Bridge Sync Error [${source.name}]: ${err.message}`);
       }
     }));
   }
   console.log(`[Historical Bridge]: Archival cycle completed.`);
+  syncState.isSyncing = false;
+  syncState.syncType = null;
+  syncState.completedAt = new Date().toISOString();
+  syncState.lastDeepSyncAt = syncState.completedAt;
+  syncState.currentSource = null;
 }
+
+// ============================================================
+// INCREMENTAL SYNC: Fast top-of-feed scan (page 1 per source)
+// Runs automatically every 30 min and on non-empty boot.
+// Stops early per source if first item already exists in DB.
+// ============================================================
+async function runIncrementalSync() {
+  if (syncState.isSyncing) return; // Never double-run
+  const activeSources = await prisma.rssSource.findMany({ where: { isActive: true } });
+  syncState.isSyncing = true;
+  syncState.syncType = 'incremental';
+  syncState.startedAt = new Date().toISOString();
+  syncState.completedAt = null;
+  syncState.totalSources = activeSources.length;
+  syncState.completedSources = 0;
+  syncState.currentSource = null;
+  syncState.newSignalsAdded = 0;
+
+  const now = new Date();
+  const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+
+  // Re-use the classification arrays from runDeepSync scope
+  // by calling a shared helper — both functions use the same logic
+  console.log(`[Incremental Sync]: Starting fast top-of-feed scan for ${activeSources.length} sources...`);
+
+  for (let i = 0; i < activeSources.length; i += 5) {
+    const batch = activeSources.slice(i, i + 5);
+    await Promise.all(batch.map(async (source) => {
+      try {
+        syncState.currentSource = source.name;
+        const feed = await parser.parseURL(source.url).catch(() => null);
+        if (!feed || !feed.items || feed.items.length === 0) {
+          syncState.completedSources++;
+          return;
+        }
+
+        let newItems = 0;
+        for (const item of feed.items) {
+          if (!item.link) continue;
+          const rawDate = item.isoDate || item.pubDate || item.date;
+          const validDate = rawDate ? new Date(rawDate) : null;
+          if (!validDate || isNaN(validDate.getTime()) || validDate < sixMonthsAgo) continue;
+
+          // Check if this item is already in DB — if so, this source is up-to-date, skip rest
+          const exists = await prisma.discoveryCache.findUnique({ where: { link: item.link }, select: { id: true } });
+          if (exists) continue; // Item already indexed, try next item in case order differs
+
+          const creatorRaw = item.creator || item.author || 'Editorial Team';
+          const titleBuffer = (item.title || '').toLowerCase();
+          const descBuffer = (item.contentSnippet || item.content || '').toLowerCase();
+
+          // Quick noise check
+          const isNoise = ['sensex', 'nifty', 'bse', 'nse', 'dalal street', 'stock market', 'share price',
+            'rupee vs', 'rupee falls', 'reliance industries', 'mukesh ambani', 'adani',
+            'bajaj finance', 'hdfc bank', 'icici bank', 'state bank of india', 'sbi',
+            'dividend', 'mutual fund', 'petrol price', 'diesel price', 'gold price', 'silver price',
+            'bond yield', 'crude oil', 'opec', 'oil prices', 'ukraine', 'russia', 'inflation'
+          ].some(key => new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(titleBuffer));
+          if (isNoise) continue;
+
+          await prisma.discoveryCache.create({
+            data: {
+              title: item.title || 'Untitled Signal',
+              link: item.link,
+              pubDate: validDate,
+              content: descBuffer.substring(0, 5000),
+              author: creatorRaw,
+              source: source.name,
+              logoUrl: source.logoUrl,
+              categories: JSON.stringify(['Other / Unclassified']) // Light classification; deep sync enriches later
+            }
+          }).catch(() => {}); // Ignore duplicate key errors
+          newItems++;
+          syncState.newSignalsAdded++;
+        }
+        console.log(`  Incremental: ${source.name} → +${newItems} new signals`);
+        syncState.completedSources++;
+      } catch (err) {
+        console.error(`  Incremental Sync Error [${source.name}]: ${err.message}`);
+        syncState.completedSources++;
+      }
+    }));
+  }
+
+  syncState.isSyncing = false;
+  syncState.syncType = null;
+  syncState.completedAt = new Date().toISOString();
+  syncState.lastIncrementalSyncAt = syncState.completedAt;
+  syncState.currentSource = null;
+  console.log(`[Incremental Sync]: Done. ${syncState.newSignalsAdded} new signals added.`);
+}
+
+// ============================================================
+// DATA RETENTION: Auto-Cleanup Job
+// Deletes signals older than 1 year (unless they are bookmarked)
+// Keeps database lean and fast to query.
+// ============================================================
+async function runDataRetentionCleanup() {
+  console.log('[Data Retention]: Running historical cache cleanup...');
+  const sixMonthsAgo = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
+  
+  try {
+    const { count } = await prisma.discoveryCache.deleteMany({
+      where: {
+        pubDate: { lt: sixMonthsAgo },
+        isBookmarked: false // Crucial: Never delete signals the admin saved
+      }
+    });
+    
+    if (count > 0) {
+      console.log(`[Data Retention]: Pruned ${count} old, unbookmarked signals from database.`);
+    } else {
+      console.log('[Data Retention]: Database is fully optimized. No old records to prune.');
+    }
+  } catch (err) {
+    console.error('[Data Retention Cleanup Error]:', err.message);
+  }
+}
+
 
 // Start server
 const start = async () => {
@@ -1121,24 +1440,36 @@ const start = async () => {
     await fastify.listen({ port, host: '0.0.0.0' })
     fastify.log.info(`Server listening on port ${port}`)
 
-    // Initial fill on boot if cache is stale (older than 2 hours)
-    const latestItem = await prisma.discoveryCache.findFirst({
-      orderBy: { pubDate: 'desc' }
-    });
-    
-    const twoHoursAgo = new Date();
-    twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
+    // Smart Boot Strategy:
+    // • DB is empty → Full deep scan (first-time setup)
+    // • DB has data → Only incremental scan (fast, non-destructive)
+    const totalCached = await prisma.discoveryCache.count();
 
-    if (!latestItem || latestItem.pubDate < twoHoursAgo) {
-      console.log('[Historical Bridge]: Cache is stale or empty. Triggering initial refresh...');
-      runDeepSync().catch(err => console.error('Initial Historical Fill Failed:', err));
+    if (totalCached === 0) {
+      console.log('[Boot]: DB is empty. Running full historical Deep Sync (one-time setup)...');
+      runDeepSync().catch(err => console.error('Initial Deep Sync Failed:', err));
+    } else {
+      console.log(`[Boot]: DB has ${totalCached} signals. Running lightweight Incremental Sync...`);
+      runIncrementalSync().catch(err => console.error('Boot Incremental Sync Failed:', err));
     }
 
-    // Permanent Fix: Run the Archival bridge every 30 minutes for better discovery velocity
+    // Periodic Incremental Sync every 30 minutes (lightweight — page 1 per source only)
     setInterval(() => {
-      console.log('[Historical Bridge]: Triggering periodic refresh...');
-      runDeepSync().catch(err => console.error('Historical Worker Failed:', err));
-    }, 30 * 60 * 1000); // 30 minutes
+      if (!syncState.isSyncing) {
+        console.log('[Scheduler]: Triggering periodic incremental sync...');
+        runIncrementalSync().catch(err => console.error('Periodic Incremental Sync Failed:', err));
+      } else {
+        console.log('[Scheduler]: Skipped — sync already in progress.');
+      }
+    }, 30 * 60 * 1000);
+
+    // Boot trigger for Data Retention 
+    runDataRetentionCleanup();
+
+    // Periodic Data Retention Clean-up (runs once every 24 hours)
+    setInterval(() => {
+      runDataRetentionCleanup();
+    }, 24 * 60 * 60 * 1000);
 
   } catch (err) {
     fastify.log.error(err)

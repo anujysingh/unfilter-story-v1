@@ -1,23 +1,38 @@
 ---
-let navLinks = [];
+let settings = {};
 try {
-  const response = await fetch('http://localhost:3000/cms/v1/navigation');
-  navLinks = await response.json();
-} catch (error) {
-  console.error('Failed to fetch navigation:', error);
-  // Fallback links if API fails
-  navLinks = [
-    { href: '/', label: 'Home' },
-    { href: '/category/technology', label: 'Technology' }
-  ];
+  const res = await fetch('http://localhost:3000/cms/v1/settings');
+  if (res.ok) {
+    settings = await res.json();
+  }
+} catch (e) {
+  console.error("Failed to fetch settings:", e);
 }
+
+let navLinks = [
+  { href: '/', label: 'Home Page' },
+  { href: '/startup-news', label: 'Startup News' },
+  { href: '/feature-founders', label: 'Feature founders' },
+  { 
+    label: 'More',
+    href: '#',
+    children: [
+      { href: '/guest-post', label: 'Guest post' },
+      { href: '/feature-your-story', label: 'Feature your story' }
+    ]
+  }
+];
 ---
 
 <header class="bg-[#1A1A2E] text-white fixed top-0 w-full mb-16 z-[100] h-16 flex items-center shadow-md">
   <div class="max-w-7xl mx-auto px-4 md:px-8 w-full flex items-center justify-between">
     <!-- Logo -->
-    <a href="/" class="text-xl md:text-2xl font-black font-playfair tracking-tight text-white hover:text-gray-200 transition-colors">
-      Unfilter Story
+    <a href="/" class="text-xl md:text-2xl font-black font-playfair tracking-tight text-white hover:text-gray-200 transition-colors flex items-center gap-2">
+      {settings.siteLogo ? (
+        <img src={settings.siteLogo} alt="Unfilter Story Logo" class="h-8 w-auto object-contain" />
+      ) : (
+        <span>Unfilter Story</span>
+      )}
     </a>
 
     <!-- Desktop Navigation -->
@@ -50,16 +65,20 @@ try {
 
     <!-- Actions -->
     <div class="flex items-center space-x-4">
-      <button aria-label="Search" class="p-2 text-gray-300 hover:text-white transition-colors">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="m21 21-4.3-4.3"></path>
-        </svg>
-      </button>
-      
-      <a href="/submit-story" class="hidden sm:inline-block bg-[#E94560] text-white px-4 py-2 font-inter text-sm font-medium rounded-md hover:bg-[#C73652] transition-colors">
-        Submit Your Story
-      </a>
+      <form action="/search" method="get" class="relative hidden sm:block">
+        <input 
+          type="search" 
+          name="q" 
+          placeholder="Search news..." 
+          class="bg-[#111122] text-white text-sm rounded-full pl-4 pr-10 py-1.5 border border-gray-700 focus:outline-none focus:border-[#E94560] transition-all duration-300 w-48 focus:w-64"
+        />
+        <button type="submit" aria-label="Search" class="absolute right-0 top-0 bottom-0 px-3 text-gray-400 hover:text-white transition-colors flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.3-4.3"></path>
+          </svg>
+        </button>
+      </form>
 
       <!-- Mobile menu toggle -->
       <button aria-label="Menu" class="md:hidden p-2 text-gray-300 hover:text-white">

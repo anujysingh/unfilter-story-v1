@@ -3,7 +3,7 @@ import { Sparkles, Brain, Zap, Copy, RefreshCcw, Wand2, Type, MessageSquare, Sav
 
 const MODELS = [
   { id: 'gpt', name: 'GPT-4o mini', provider: 'OpenAI', icon: Zap, description: 'High-Speed Editorial Engine. Online and stable.' },
-  { id: 'gemini', name: 'Gemini 2.5 Pro', provider: 'Google', icon: Brain, description: 'Premium Writing Engine (Free Tier Limits Apply).' }
+  { id: 'gemini', name: 'Gemini / Gemma Studio', provider: 'Google', icon: Brain, description: 'Premium Google Editorial Weights (Limitless).' }
 ]
 
 const ACTIONS = [
@@ -106,10 +106,6 @@ export default function AIStudio() {
       setError(err.message)
     } finally {
       setIsLoading(false)
-      // Start 60s cooldown if Gemini was used
-      if (selectedModel === 'gemini') {
-        setGeminiCooldown(60)
-      }
     }
   }
 
@@ -198,9 +194,9 @@ export default function AIStudio() {
 
             <button
               onClick={handleTransform}
-              disabled={isLoading || (selectedModel === 'gemini' && geminiCooldown > 0)}
+              disabled={isLoading}
               className={`w-full mt-8 py-5 rounded-2xl font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all ${
-                isLoading || (selectedModel === 'gemini' && geminiCooldown > 0)
+                isLoading
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                 : 'bg-indigo-600 text-white hover:bg-indigo-700 active:scale-95 shadow-lg shadow-indigo-200'
               }`}
@@ -209,11 +205,6 @@ export default function AIStudio() {
                 <>
                   <RefreshCcw className="animate-spin" size={18} />
                   Processing...
-                </>
-              ) : (selectedModel === 'gemini' && geminiCooldown > 0) ? (
-                <>
-                  <RefreshCcw size={18} />
-                  Cooldown: {geminiCooldown}s
                 </>
               ) : (
                 <>

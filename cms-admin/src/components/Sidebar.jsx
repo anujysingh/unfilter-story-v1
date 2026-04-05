@@ -13,7 +13,8 @@ import {
   Zap,
   Sparkles,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MessageSquare
 } from 'lucide-react'
 
 const navItems = [
@@ -26,6 +27,7 @@ const navItems = [
   { label: 'Header Navigation', icon: Menu, path: '/navigation' },
   { label: 'Site Architecture', icon: Map, path: '/architecture' },
   { label: 'Users', icon: Users, path: '/users' },
+  { label: 'Inbox', icon: MessageSquare, path: '/contact' },
   { label: 'Settings', icon: Settings, path: '/settings' },
 ]
 

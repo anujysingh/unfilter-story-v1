@@ -110,25 +110,27 @@ const trendingNews = [
                 <h2 class="text-3xl font-playfair font-black text-[#1A1A2E] mb-8 border-b-2 border-gray-100 pb-2">Latest News</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {gridStories.map(story => (
-                        <article class="group cursor-pointer">
-                            <div class="w-full aspect-[4/3] bg-gray-100 rounded-lg mb-4 overflow-hidden relative border border-gray-100">
-                                {story.featuredImageUrl ? (
-                                    <img src={story.featuredImageUrl} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={story.headline} />
-                                ) : (
-                                    <div class="flex items-center justify-center w-full h-full">
-                                        <span class="text-gray-400 text-[10px] font-black uppercase tracking-widest px-4">No Image</span>
-                                    </div>
-                                )}
-                            </div>
-                            <h3 class="text-xl font-bold font-playfair text-gray-900 group-hover:text-[#E94560] transition-colors mb-2 line-clamp-2">
-                                {story.headline}
-                            </h3>
-                            <div 
-                                class="text-gray-600 text-sm font-inter line-clamp-3 mb-3 prose prose-sm prose-gray max-w-none"
-                                set:html={story.body}
-                            />
-                            <span class="text-xs text-gray-500 font-inter">{new Date(story.publishedAt).toLocaleDateString()}</span>
-                        </article>
+                        <a href={`/article/${story.slug}`} class="block group cursor-pointer">
+                            <article>
+                                <div class="w-full aspect-[4/3] bg-gray-100 rounded-lg mb-4 overflow-hidden relative border border-gray-100">
+                                    {story.featuredImageUrl ? (
+                                        <img src={story.featuredImageUrl} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={story.headline} />
+                                    ) : (
+                                        <div class="flex items-center justify-center w-full h-full">
+                                            <span class="text-gray-400 text-[10px] font-black uppercase tracking-widest px-4">No Image</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <h3 class="text-xl font-bold font-playfair text-gray-900 group-hover:text-[#E94560] transition-colors mb-2 line-clamp-2">
+                                    {story.headline}
+                                </h3>
+                                <div 
+                                    class="text-gray-600 text-sm font-inter line-clamp-3 mb-3 prose prose-sm prose-gray max-w-none"
+                                    set:html={story.body}
+                                />
+                                <span class="text-xs text-gray-500 font-inter">{new Date(story.publishedAt).toLocaleDateString()}</span>
+                            </article>
+                        </a>
                     ))}
                 </div>
             </div>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Zap, RefreshCw, ExternalLink, Send, Plus, Trash2, Globe, AlertCircle, Loader2, ListFilter, Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, LayoutGrid, List, Sparkles, Clock, ChevronDown } from 'lucide-react'
+import React, { useState, useEffect, useRef } from 'react'
+import { Zap, RefreshCw, ExternalLink, Send, Plus, Trash2, Globe, AlertCircle, Loader2, ListFilter, Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, LayoutGrid, List, Sparkles, Clock, ChevronDown, Radio, CheckCircle2 } from 'lucide-react'
 
 export default function Discovery() {
   const [news, setNews] = useState([])
@@ -8,7 +8,7 @@ export default function Discovery() {
   const [refreshing, setRefreshing] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [newSource, setNewSource] = useState({ name: '', url: '' })
-  const [dateFilter, setDateFilter] = useState('all')
+  const [dateFilter, setDateFilter] = useState('3m')
   const [customDate, setCustomDate] = useState('')
   const [selectedSources, setSelectedSources] = useState([]) 
   const [selectedCategories, setSelectedCategories] = useState([]) 
@@ -21,6 +21,11 @@ export default function Discovery() {
   const [limit, setLimit] = useState(10)
   const [bookmarkedOnly, setBookmarkedOnly] = useState(false)
   const [collapsed, setCollapsed] = useState({ signals: false, industries: false, sources: false, temporal: false })
+  const [syncStatus, setSyncStatus] = useState(null)
+  const [justCompleted, setJustCompleted] = useState(false)
+  const syncPollRef = useRef(null)
+  const prevSyncingRef = useRef(false)
+  const justCompletedTimerRef = useRef(null)
 
   const toggleCollapse = (section) => setCollapsed(prev => ({ ...prev, [section]: !prev[section] }))
 
@@ -120,6 +125,35 @@ export default function Discovery() {
     fetchSources()
   }, [])
 
+  // Sync Status Poller
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const res = await fetch('http://localhost:3000/cms/v1/rss/sync-status')
+        const data = await res.json()
+        setSyncStatus(data)
+
+        // If sync just completed, auto-refresh signals once
+        if (prevSyncingRef.current && !data.isSyncing) {
+          fetchNews(false, 1)
+          setJustCompleted(true)
+          clearTimeout(justCompletedTimerRef.current)
+          justCompletedTimerRef.current = setTimeout(() => setJustCompleted(false), 4000)
+        }
+        prevSyncingRef.current = data.isSyncing
+      } catch (e) {
+        // Silently ignore if backend is unreachable
+      }
+    }
+
+    poll() // Immediate first check
+    syncPollRef.current = setInterval(poll, 3000)
+    return () => {
+      clearInterval(syncPollRef.current)
+      clearTimeout(justCompletedTimerRef.current)
+    }
+  }, [])
+
   const handleAddSource = async (e) => {
     e.preventDefault()
     try {
@@ -161,6 +195,19 @@ export default function Discovery() {
 
   const handleImport = async (item) => {
     alert(`Ready to import: ${item.title}\n\nThis would pre-fill the Article Editor with the RSS content and headline.`)
+  }
+
+  const triggerManualSync = async (type = 'incremental') => {
+    if (syncStatus?.isSyncing) return
+    try {
+      await fetch('http://localhost:3000/cms/v1/rss/trigger-sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type })
+      })
+    } catch (err) {
+      console.error('Failed to trigger sync', err)
+    }
   }
 
   // Trust the backend 'Thematic Routing Engine' as the single source of truth
@@ -228,7 +275,7 @@ export default function Discovery() {
                <RefreshCw size={12} className={`cursor-pointer ${refreshing ? 'animate-spin' : ''}`} onClick={() => fetchNews(true, 1, true)} />
              </h4>
              <button
-               onClick={() => { setSelectedSources([]); setSelectedCategories([]); setBookmarkedOnly(false); setDateFilter('all'); }}
+               onClick={() => { setSelectedSources([]); setSelectedCategories([]); setBookmarkedOnly(false); setDateFilter('3m'); }}
                className="w-full h-12 flex items-center gap-3 px-4 rounded-xl bg-[var(--cms-accent-light)] border border-[var(--cms-accent)]/10 text-[var(--cms-accent)] text-[11px] font-black hover:scale-[1.02] transition-all"
              >
                <Globe size={14} /> Global Feed
@@ -246,6 +293,62 @@ export default function Discovery() {
              </button>
           </div>
 
+          {/* Sync Control Panel */}
+          <div className="space-y-3 bg-gray-50/70 rounded-2xl p-5 border border-gray-100">
+            <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
+              <Radio size={9} /> Sync Control
+            </h4>
+            <div className="space-y-1.5">
+              {syncStatus?.lastIncrementalSyncAt && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-black text-gray-400">Last Quick Sync</span>
+                  <span className="text-[9px] font-black text-gray-600">
+                    {new Date(syncStatus.lastIncrementalSyncAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              )}
+              {syncStatus?.lastDeepSyncAt && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-black text-gray-400">Last Full Scan</span>
+                  <span className="text-[9px] font-black text-gray-600">
+                    {new Date(syncStatus.lastDeepSyncAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              )}
+              {syncStatus?.totalSignalsInDB != null && (
+                <div className="flex justify-between items-center">
+                  <span className="text-[9px] font-black text-gray-400">Total in DB</span>
+                  <span className="text-[9px] font-black text-[var(--cms-accent)]">{syncStatus.totalSignalsInDB?.toLocaleString()}</span>
+                </div>
+              )}
+              {!syncStatus?.lastIncrementalSyncAt && !syncStatus?.lastDeepSyncAt && (
+                <p className="text-[9px] font-black text-gray-300">No sync completed yet this session.</p>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <button
+                onClick={() => triggerManualSync('incremental')}
+                disabled={syncStatus?.isSyncing}
+                className="py-2.5 px-3 bg-white border border-gray-200 rounded-xl text-[9px] font-black text-gray-700 hover:border-gray-400 hover:text-black transition-all disabled:opacity-30 flex items-center justify-center gap-1.5"
+              >
+                <RefreshCw size={9} className={syncStatus?.isSyncing && syncStatus?.syncType === 'incremental' ? 'animate-spin' : ''} />
+                Quick Sync
+              </button>
+              <button
+                onClick={() => triggerManualSync('deep')}
+                disabled={syncStatus?.isSyncing}
+                title="Re-scans all historical pages. Takes several minutes."
+                className="py-2.5 px-3 bg-black border border-black rounded-xl text-[9px] font-black text-white hover:bg-gray-800 transition-all disabled:opacity-30 flex items-center justify-center gap-1.5"
+              >
+                <Zap size={9} fill="currentColor" className={syncStatus?.isSyncing && syncStatus?.syncType === 'deep' ? 'animate-pulse' : ''} />
+                Full Rescan
+              </button>
+            </div>
+            <p className="text-[8px] text-gray-400 font-black leading-relaxed">
+              Quick Sync fetches latest (~10s). Full Rescan rebuilds entire archive (use sparingly).
+            </p>
+          </div>
+
           {/* Section: Temporal Intelligence */}
           <div className="space-y-4 border-b border-gray-100 pb-6">
              <h4 className="text-[11px] font-black text-gray-600/70 px-2 flex items-center justify-between cursor-pointer group" onClick={() => toggleCollapse('temporal')}>
@@ -254,7 +357,7 @@ export default function Discovery() {
              </h4>
              {!collapsed.temporal && (
                <div className="grid grid-cols-1 gap-2 animate-in slide-in-from-top-2 duration-300">
-                 {['all', '24h', '48h', '7d', '15d', '3m', 'custom'].map(t => (
+                 {['3m', '15d', '7d', '48h', '24h', 'custom'].map(t => (
                    <button 
                      key={t}
                      onClick={() => setDateFilter(t)}
@@ -264,14 +367,14 @@ export default function Discovery() {
                          : 'bg-white text-gray-700/80 border-gray-100 hover:border-gray-300 hover:text-black'
                      }`}
                    >
-                     {t === 'all' ? 'Anytime Signals' : t === 'custom' ? '📅 Custom Frame' : `Last ${t.replace('h',' Hours').replace('d',' Days').replace('m',' Months')}`}
+                     {t === '3m' ? 'Anytime Signals (Last 3M)' : t === 'custom' ? '📅 Custom Frame' : `Last ${t.replace('h',' Hours').replace('d',' Days')}`}
                    </button>
                  ))}
                  
                  {dateFilter === 'custom' && (
                    <div className="space-y-2 mt-2 p-4 bg-gray-50 rounded-2xl border border-gray-200 animate-in slide-in-from-top-2 duration-300">
-                      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} max={new Date().toLocaleDateString('en-CA')} className="w-full p-3 bg-white border border-gray-300 rounded-xl text-[10px] font-black outline-none" />
-                      <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} max={new Date().toLocaleDateString('en-CA')} className="w-full p-3 bg-white border border-gray-300 rounded-xl text-[10px] font-black outline-none" />
+                      <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} min={new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA')} max={new Date().toLocaleDateString('en-CA')} className="w-full p-3 bg-white border border-gray-300 rounded-xl text-[10px] font-black outline-none" />
+                      <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} min={new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toLocaleDateString('en-CA')} max={new Date().toLocaleDateString('en-CA')} className="w-full p-3 bg-white border border-gray-300 rounded-xl text-[10px] font-black outline-none" />
                       <button onClick={() => fetchNews(false, 1)} disabled={!startDate} className="w-full py-3 bg-[var(--cms-accent)] text-white text-[9.5px] font-black rounded-xl hover:bg-black transition-all disabled:opacity-30">Lock Temporal Frame</button>
                    </div>
                  )}
@@ -472,6 +575,89 @@ export default function Discovery() {
              </button>
           </div>
         </header>
+
+        {/* 🔴 Live Sync Progress Banner */}
+        {syncStatus && (syncStatus.isSyncing || justCompleted) && (
+          <div className={`border-b px-12 py-4 flex items-center gap-6 transition-all duration-700 animate-in slide-in-from-top-2 ${
+            syncStatus.isSyncing 
+              ? 'bg-gradient-to-r from-indigo-950 to-black border-indigo-800/40' 
+              : 'bg-gradient-to-r from-emerald-950 to-black border-emerald-700/40'
+          }`}>
+            {/* Pulsing Status Icon */}
+            <div className="relative flex-shrink-0">
+              {syncStatus.isSyncing ? (
+                <>
+                  <div className="w-3 h-3 bg-indigo-400 rounded-full animate-ping absolute opacity-60" />
+                  <div className="w-3 h-3 bg-indigo-400 rounded-full relative" />
+                </>
+              ) : (
+                <CheckCircle2 size={14} className="text-emerald-400" />
+              )}
+            </div>
+
+            {/* Text Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-2">
+                <span className={`text-[10px] font-[900] tracking-[0.15em] uppercase ${syncStatus.isSyncing ? 'text-indigo-300' : 'text-emerald-300'}`}>
+                  {syncStatus.isSyncing 
+                    ? (syncStatus.syncType === 'deep' ? '⚡ Full Historical Rescan In Progress' : 'Signal Acquisition In Progress')
+                    : '✓ Sync Complete — Feed Auto-Refreshed'}
+                </span>
+                {syncStatus.isSyncing && syncStatus.currentSource && (
+                  <span className="text-[9px] font-black text-white/40 tracking-tight bg-white/5 px-2 py-0.5 rounded-md border border-white/10">
+                    ↳ {syncStatus.currentSource}
+                  </span>
+                )}
+              </div>
+
+              {/* Progress Bar */}
+              {syncStatus.isSyncing && (
+                <div className="h-1 bg-white/10 rounded-full overflow-hidden w-full max-w-sm">
+                  <div 
+                    className="h-full bg-gradient-to-r from-indigo-500 to-violet-400 rounded-full transition-all duration-1000 ease-out"
+                    style={{ width: `${Math.max(2, syncStatus.progressPercent || 0)}%` }}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Stats */}
+            <div className="flex items-center gap-5 flex-shrink-0">
+              {syncStatus.isSyncing && (
+                <>
+                  <div className="text-center">
+                    <div className="text-[18px] font-[900] text-white tabular-nums leading-none">
+                      {syncStatus.completedSources}<span className="text-white/30 text-[12px]">/{syncStatus.totalSources}</span>
+                    </div>
+                    <div className="text-[8px] font-black text-white/30 uppercase tracking-widest mt-0.5">Sources</div>
+                  </div>
+                  <div className="w-px h-8 bg-white/10" />
+                  <div className="text-center">
+                    <div className="text-[18px] font-[900] text-indigo-300 tabular-nums leading-none">
+                      {syncStatus.newSignalsAdded?.toLocaleString() || 0}
+                    </div>
+                    <div className="text-[8px] font-black text-white/30 uppercase tracking-widest mt-0.5">Signals</div>
+                  </div>
+                  <div className="w-px h-8 bg-white/10" />
+                  <div className="text-center">
+                    <div className="text-[18px] font-[900] text-white/60 tabular-nums leading-none">
+                      {Math.floor((syncStatus.elapsedSeconds || 0) / 60)}:{String((syncStatus.elapsedSeconds || 0) % 60).padStart(2, '0')}
+                    </div>
+                    <div className="text-[8px] font-black text-white/30 uppercase tracking-widest mt-0.5">Elapsed</div>
+                  </div>
+                </>
+              )}
+              {!syncStatus.isSyncing && (
+                <div className="text-center">
+                  <div className="text-[18px] font-[900] text-emerald-300 tabular-nums leading-none">
+                    {syncStatus.newSignalsAdded?.toLocaleString() || 0}
+                  </div>
+                  <div className="text-[8px] font-black text-white/30 uppercase tracking-widest mt-0.5">Total Signals</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Content Pulse Grid */}
         <main className="flex-1 p-12 max-w-7xl mx-auto w-full">

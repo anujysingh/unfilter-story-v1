@@ -134,12 +134,15 @@ The **Unfilter Story CMS Admin** is a professional-grade editorial environment d
         3.  **Rule 3 — Semantic False-Positive Guards**: Cross-sector filtration (e.g., "AI/ML" news cannot trigger "EdTech" without explicit education-sector anchor words).
         4.  **Rule 4 — Whole-Word Precision**: Use of `\b` boundary enforcement in the Regex core to prevent contextual "leakage" (e.g., "space" vs "personal space").
 *   **Tactical Control Row**:
-    *   **Precision Calendar Matrix**: Interactive date selection (Start/End). Single StartDate isolates signals for exactly one day.
-    *   **Temporal Constraint Guard**: 90-day single-scan limit; 1-year rolling research lifecycle.
-*   **Deep Signal Sync (Backend Architecture)**:
-    *   **Parallel Ingestion Core**: Simultaneous processing of 3-source batches across an expanded network of 25+ high-fidelity RSS endpoints (including targeted Google News metrics, TechCrunch India, Business Standard, and NDTV Profit).
-    *   **Autonomous Archival Worker**: 30-minute high-frequency cron cycle ensuring continuous, near-real-time population of the 1-year intelligence buffer.
-    *   **Advanced Keyword Taxonomy**: Comprehensive precision mapping covering granular subsets like semiconductors, RAM, generative model variants, cybersecurity tools (VPNs, passkeys), and automotive-tech to virtually eliminate 'Unclassified' leakage.
+    *   **Live Sync Controls**: Dedicated sidebar panel displaying real-time database density, timestamps of the last automated sync operations, and manual triggers.
+    *   **Precision Calendar Matrix**: Interactive date selection (Start/End) explicitly max-capped at a 3-month (90 day) retrospective filter limit for optimal performance.
+*   **Two-Tier Synchronization Architecture (RSS Engine)**:
+    *   **Lightweight Quick Sync (~10s)**: A high-frequency incremental fetch running every 30 minutes. It probes exclusively the top item of each source and exits early upon database cache overlap to completely eliminate API rate-limits and CPU strain.
+    *   **Deep Archival Scan (Initial Boot & Manual-Only)**: The computationally expensive 100-page historical rescan logic is strictly isolated. It automatically triggers *only* if the initial database is entirely empty, or when invoked via the manual UI "Full Rescan" override button.
+    *   **Continuous Live UI Banners**: Frontend polling loop tracking real-time sync progress natively across the Discovery Dashboard, rendering auto-update notices gracefully.
+*   **Automated Data Retention Protocol**:
+    *   **The 6-Month Perimeter**: Scrapers strictly enforce a hard 6-month rejection cutoff for incoming signals. 
+    *   **Self-Managing Database Pruning**: On system startup and recursively every 24 hours thereafter, a maintenance job irrevocably deletes any non-bookmarked signal physically older than 180 days to maintain peak database read performance and strictly bound storage consumption.
 
 ---
 

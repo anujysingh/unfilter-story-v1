@@ -1,11 +1,25 @@
 ---
+let settings = {};
+try {
+  const res = await fetch('http://localhost:3000/cms/v1/settings');
+  if (res.ok) {
+    settings = await res.json();
+  }
+} catch (e) {
+  // ignore
+}
+
 const currentYear = new Date().getFullYear();
 ---
 
 <footer class="bg-white border-t border-gray-200 mt-auto py-12">
   <div class="max-w-7xl mx-auto px-4 md:px-8 grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
     <div class="md:col-span-1">
-      <h3 class="text-xl font-black font-playfair mb-4 text-[#1A1A2E]">Unfilter Story</h3>
+      {settings.siteLogo ? (
+        <img src={settings.siteLogo} alt="Unfilter Story Logo" class="h-10 mb-4 object-contain" />
+      ) : (
+        <h3 class="text-xl font-black font-playfair mb-4 text-[#1A1A2E]">Unfilter Story</h3>
+      )}
       <p class="text-sm font-inter text-gray-500 mb-4 leading-relaxed">
         Delivering authentic, unfiltered news on startups, technology, and business, bringing you the stories that matter most.
       </p>
@@ -43,8 +57,9 @@ const currentYear = new Date().getFullYear();
   <div class="max-w-7xl mx-auto px-4 md:px-8 pt-8 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center text-sm text-gray-500 font-inter">
     <p>&copy; {currentYear} Unfilter Story. All rights reserved.</p>
     <div class="flex space-x-4 mt-4 md:mt-0">
-      <a href="#" class="hover:text-[#1A1A2E] text-gray-400">Twitter</a>
-      <a href="#" class="hover:text-[#1A1A2E] text-gray-400">LinkedIn</a>
+      {settings.twitterUrl && <a href={settings.twitterUrl} target="_blank" rel="noopener noreferrer" class="hover:text-[#1A1A2E] text-gray-400">Twitter</a>}
+      {settings.linkedinUrl && <a href={settings.linkedinUrl} target="_blank" rel="noopener noreferrer" class="hover:text-[#1A1A2E] text-gray-400">LinkedIn</a>}
+      {settings.instagramUrl && <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" class="hover:text-[#1A1A2E] text-gray-400">Instagram</a>}
     </div>
   </div>
 </footer>

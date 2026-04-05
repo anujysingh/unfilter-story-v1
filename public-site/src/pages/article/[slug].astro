@@ -1,0 +1,111 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+
+const { slug } = Astro.params;
+
+let article = null;
+let errorMsg = null;
+
+try {
+  // Try fetching the article using the backend's new single-slug public routing API
+  const response = await fetch(`http://localhost:3000/v1/articles/${slug}`);
+  if (response.ok) {
+    article = await response.json();
+  } else {
+    errorMsg = `Article "${slug}" could not be found (Status: ${response.status})`;
+  }
+} catch (e) {
+  console.error("Failed to fetch article:", e.message);
+  errorMsg = "Encountered an error trying to communicate with the Unfilter Story internal backend. Is the API server running?";
+}
+
+// Just in case no fallback and no actual return
+if (!article && !errorMsg) {
+  errorMsg = "Article not found.";
+}
+
+// Format the date strictly
+const formattedDate = article && article.publishedAt
+  ? new Date(article.publishedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  : 'Recently';
+---
+
+<Layout title={article ? `${article.headline} | Unfilter Story` : 'Article Not Found | Unfilter Story'}>
+  <Header />
+
+  <main class="flex-1 w-full max-w-4xl mx-auto px-4 md:px-8 py-10 lg:py-16">
+    
+    {errorMsg ? (
+      <div class="text-center py-24">
+        <h1 class="text-3xl font-black font-playfair text-[#1A1A2E] mb-4">404: Story Not Found</h1>
+        <p class="text-gray-500 font-inter text-lg">{errorMsg}</p>
+        <div class="mt-8">
+          <a href="/" class="px-6 py-3 bg-[#E94560] text-white font-bold rounded-lg hover:bg-red-700 transition-colors">Return Home</a>
+        </div>
+      </div>
+    ) : (
+      <article>
+        
+        {/* Author / Date / Time */}
+        <div class="flex items-center space-x-4 mb-6 pt-4 border-t-2 border-[#E94560] inline-block">
+          <span class="font-inter text-xs font-bold uppercase tracking-widest text-[#E94560]">
+            {article.category || 'Tech & Startups'}
+          </span>
+          <span class="text-gray-300">|</span>
+          <span class="font-inter text-gray-500 font-medium text-sm text-gray-800">
+            By <strong class="text-[#1A1A2E]">{article.author || 'Editorial Team'}</strong>
+          </span>
+          <span class="text-gray-300">|</span>
+          <span class="font-inter text-gray-500 font-medium text-sm">
+            {formattedDate}
+          </span>
+          <span class="text-gray-300">|</span>
+          <span class="font-inter text-gray-500 font-medium text-sm flex items-center gap-1">
+             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+             {article.readingTimeMins || 4} min read
+          </span>
+        </div>
+
+        {/* Headline */}
+        <h1 class="text-4xl md:text-5xl lg:text-7xl font-playfair font-black text-[#1A1A2E] leading-[1.1] mb-8 lg:mb-12 tracking-tight">
+          {article.headline}
+        </h1>
+
+        {/* Hero Image */}
+        {article.featuredImageUrl && (
+          <figure class="mb-12">
+            <div class="w-full aspect-[21/9] lg:aspect-[2/1] overflow-hidden rounded-2xl bg-gray-100 shadow-sm border border-gray-100">
+              <img src={article.featuredImageUrl} alt={article.headline} class="w-full h-full object-cover" />
+            </div>
+          </figure>
+        )}
+
+        {/* Body */}
+        <div 
+          class="prose prose-lg md:prose-xl max-w-none prose-p:font-inter prose-p:text-gray-800 prose-p:leading-relaxed prose-headings:font-playfair prose-headings:font-black prose-a:text-[#E94560] prose-li:font-inter prose-li:text-gray-800"
+          set:html={article.body}
+        />
+        
+      </article>
+      
+      <div class="mt-16 pt-8 border-t border-gray-100 flex items-center justify-between">
+         <div class="flex gap-4">
+             <button class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:text-blue-500 hover:bg-blue-50 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
+             </button>
+             <button class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:text-blue-700 hover:bg-blue-50 transition-colors">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+             </button>
+             <button class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition-colors" onclick="navigator.clipboard.writeText(window.location.href); alert('Link copied to clipboard')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+             </button>
+         </div>
+      </div>
+    )}
+
+  </main>
+  
+  <Footer />
+</Layout>

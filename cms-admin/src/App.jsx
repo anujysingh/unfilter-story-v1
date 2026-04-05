@@ -12,6 +12,7 @@ import Users from './pages/Users'
 import Settings from './pages/Settings'
 import Discovery from './pages/Discovery'
 import AIStudio from './pages/AIStudio'
+import ContactMessages from './pages/ContactMessages'
 
 function Error404() {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="discovery" element={<Discovery />} />
           <Route path="ai-studio" element={<AIStudio />} />
+          <Route path="contact" element={<ContactMessages />} />
           <Route path="*" element={<Error404 />} />
         </Route>
       </Routes>
