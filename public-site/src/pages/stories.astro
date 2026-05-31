@@ -1,0 +1,23 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../react-app/components/Header';
+import Footer from '../react-app/components/Footer';
+import Stories from '../react-app/pages/Stories';
+
+// Fetch articles from our Fastify backend running on port 3000
+let articles = [];
+try {
+  const response = await fetch('http://localhost:3000/v1/articles');
+  if (response.ok) {
+    articles = await response.json();
+  }
+} catch (e) {
+  console.error("Failed to fetch articles for stories:", e.message);
+}
+---
+
+<Layout title="Startup Stories | Unfilter Story">
+  <Header client:load />
+  <Stories client:load articles={articles} />
+  <Footer client:load />
+</Layout>

@@ -13,6 +13,11 @@ export default function Discovery() {
   const [selectedSources, setSelectedSources] = useState([]) 
   const [selectedCategories, setSelectedCategories] = useState([]) 
   const [viewMode, setViewMode] = useState('grid') 
+  const [activeTab, setActiveTab] = useState('feed')
+  const [trendingTopics, setTrendingTopics] = useState([])
+  const [loadingTrending, setLoadingTrending] = useState(false)
+  const [trendingFilterDate, setTrendingFilterDate] = useState('7') // '1', '7', '30'
+  const [trendingFilterStatus, setTrendingFilterStatus] = useState('ALL') // 'ALL', 'TRENDING', 'HIGHLY TRENDING'
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [page, setPage] = useState(1)
@@ -103,6 +108,26 @@ export default function Discovery() {
       console.error('Failed to fetch sources', err)
     }
   }
+
+  const fetchTrending = async () => {
+    setLoadingTrending(true);
+    try {
+      const res = await fetch(`http://localhost:3000/cms/v1/rss/trending?days=${trendingFilterDate}`);
+      const data = await res.json();
+      setTrendingTopics(data || []);
+    } catch (err) {
+      console.error('Failed to fetch trending', err);
+    } finally {
+      setLoadingTrending(false);
+    }
+  }
+
+  useEffect(() => {
+    if (activeTab === 'trending') {
+      fetchTrending();
+    }
+  }, [activeTab, trendingFilterDate]);
+
 
   useEffect(() => {
     // Sources, categories, and bookmark toggles trigger auto-fetch immediately.
@@ -547,24 +572,43 @@ export default function Discovery() {
         {/* Compact Header Bar */}
         <header className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-gray-100 px-12 py-6 flex items-center justify-between z-10 transition-all duration-300 hover:bg-white">
           <div className="flex items-center gap-8">
-             <div className="bg-black text-[var(--cms-accent-light)] px-5 py-2 rounded-xl text-[11px] font-[900] tracking-tight shadow-lg">
-               DENSITY: {pagination.total} SIGNALS DETECTED
+             <div className="flex items-center gap-2 bg-gray-100 p-1 rounded-xl">
+               <button 
+                 onClick={() => setActiveTab('feed')}
+                 className={`px-4 py-2 rounded-lg text-[11px] font-[900] transition-all ${activeTab === 'feed' ? 'bg-white text-black shadow-sm' : 'text-gray-500 hover:text-black'}`}
+               >
+                 LIVE FEED
+               </button>
+               <button 
+                 onClick={() => setActiveTab('trending')}
+                 className={`px-4 py-2 rounded-lg text-[11px] font-[900] transition-all flex items-center gap-2 ${activeTab === 'trending' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-black'}`}
+               >
+                 <Sparkles size={14} /> TRENDING
+               </button>
              </div>
-             <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-200 shadow-sm">
-                <button 
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-black shadow-sm' : 'text-gray-300 hover:text-gray-500'}`}
-                >
-                  <LayoutGrid size={16} />
-                </button>
-                <button 
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-black shadow-sm' : 'text-gray-300 hover:text-gray-500'}`}
-                >
-                  <List size={16} />
-                </button>
-             </div>
+             {activeTab === 'feed' && (
+               <>
+                 <div className="bg-black text-[var(--cms-accent-light)] px-5 py-2 rounded-xl text-[11px] font-[900] tracking-tight shadow-lg">
+                   DENSITY: {pagination.total} SIGNALS DETECTED
+                 </div>
+                 <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border border-gray-200 shadow-sm">
+                    <button 
+                      onClick={() => setViewMode('grid')}
+                      className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-black shadow-sm' : 'text-gray-300 hover:text-gray-500'}`}
+                    >
+                      <LayoutGrid size={16} />
+                    </button>
+                    <button 
+                      onClick={() => setViewMode('list')}
+                      className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-black shadow-sm' : 'text-gray-300 hover:text-gray-500'}`}
+                    >
+                      <List size={16} />
+                    </button>
+                 </div>
+               </>
+             )}
           </div>
+
 
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-gray-200 shadow-inner overflow-hidden">
@@ -686,123 +730,309 @@ export default function Discovery() {
 
         {/* Content Pulse Grid */}
         <main className="flex-1 p-12 max-w-7xl mx-auto w-full">
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-48 gap-8 animate-in fade-in duration-500">
-               <div className="relative">
-                 <div className="w-24 h-24 border-4 border-indigo-100 rounded-full animate-ping absolute opacity-30"></div>
-                 <div className="w-24 h-24 border-4 border-t-[var(--cms-accent)] border-transparent rounded-full animate-spin"></div>
-                 <Zap className="absolute inset-0 m-auto text-[var(--cms-accent)] animate-pulse" size={32} />
-               </div>
-               <div className="text-center space-y-2">
-                 <h3 className="text-2xl font-black text-black tracking-tighter">Initializing Satellite Link</h3>
-                 <p className="text-[10px] font-bold text-gray-400 mt-1">Decoding multi-layered RSS payloads...</p>
-               </div>
-            </div>
-          ) : filteredNews.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-48 gap-6 opacity-40">
-               <Globe size={80} className="text-gray-200" />
-               <div className="text-center">
-                 <h2 className="text-2xl font-black text-gray-300 tracking-tighter">No Signals Captured</h2>
-                 <p className="text-[10px] font-bold text-gray-200 mt-2">Adjust your intelligence perimeter</p>
-               </div>
-            </div>
-          ) : (
-            <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-10" : "flex flex-col gap-6"}>
-              {filteredNews.map((item, idx) => (
-                <div 
-                  key={idx} 
-                  className={`group bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:border-indigo-100 transition-all duration-700 overflow-hidden flex flex-col relative ${
-                    viewMode === 'grid' ? 'hover:-translate-y-3' : 'sm:flex-row min-h-[220px]'
-                  }`}
-                >
-                  {/* Visual Accent */}
-                  <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-[var(--cms-accent)] to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700" />
-                  
-                  <div className={`${viewMode === 'grid' ? 'p-10 pb-6' : 'p-10 flex-1'} flex flex-col`}>
-                    <div className="flex items-start justify-between mb-8">
-                        <div className="flex flex-wrap gap-2">
-                           {(item.logoUrl || item.source) && (
-                             <div className="h-8 px-4 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm overflow-hidden min-w-[60px]">
-                               <img 
-                                 src={item.logoUrl || `https://www.google.com/s2/favicons?domain=${item.source.toLowerCase().replace(/\s+/g, '')}${item.source.includes('.') ? '' : '.com'}&sz=128`} 
-                                 alt={item.source} 
-                                 className="h-4 w-auto object-contain transition-transform duration-500 group-hover:scale-110" 
-                                 onError={(e) => { 
-                                   if (!e.target.dataset.tried) {
-                                     e.target.dataset.tried = "1";
-                                     e.target.src = `https://www.google.com/s2/favicons?domain=${item.source.split('.')[0]}.com&sz=128`;
-                                   } else if (e.target.dataset.tried === "1") {
-                                     e.target.dataset.tried = "2";
-                                     e.target.src = `https://icon.horse/icon/${item.source.toLowerCase().replace(/\s+/g, '')}${item.source.includes('.') ? '' : '.com'}`;
-                                   } else {
-                                     e.target.style.display = 'none'; 
-                                     e.target.parentElement.innerHTML = `<span class="text-[10px] font-black text-indigo-400 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">${item.source}</span>`; 
-                                   }
-                                 }}
-                               />
-                             </div>
-                           )}
-                           <span className="px-3 py-1 bg-white text-gray-700 rounded-lg text-[10px] font-black border border-gray-200">
-                             {new Date(item.pubDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })}
-                           </span>
-                        </div>
-                        <button 
-                          onClick={(e) => { e.preventDefault(); toggleBookmark(item.id); }}
-                          className={`p-2.5 rounded-xl transition-all ${item.isBookmarked ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:text-black border border-gray-200'}`}
-                        >
-                          {item.isBookmarked ? <BookmarkCheck size={16} fill="currentColor" /> : <Bookmark size={16} />}
-                        </button>
+          {activeTab === 'feed' ? (
+            loading ? (
+              <div className="flex flex-col items-center justify-center py-48 gap-8 animate-in fade-in duration-500">
+                 <div className="relative">
+                   <div className="w-24 h-24 border-4 border-indigo-100 rounded-full animate-ping absolute opacity-30"></div>
+                   <div className="w-24 h-24 border-4 border-t-[var(--cms-accent)] border-transparent rounded-full animate-spin"></div>
+                   <Zap className="absolute inset-0 m-auto text-[var(--cms-accent)] animate-pulse" size={32} />
+                 </div>
+                 <div className="text-center space-y-2">
+                   <h3 className="text-2xl font-black text-black tracking-tighter">Initializing Satellite Link</h3>
+                   <p className="text-[10px] font-bold text-gray-400 mt-1">Decoding multi-layered RSS payloads...</p>
+                 </div>
+              </div>
+            ) : filteredNews.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-48 gap-6 opacity-40">
+                 <Globe size={80} className="text-gray-200" />
+                 <div className="text-center">
+                   <h2 className="text-2xl font-black text-gray-300 tracking-tighter">No Signals Captured</h2>
+                   <p className="text-[10px] font-bold text-gray-200 mt-2">Adjust your intelligence perimeter</p>
+                 </div>
+              </div>
+            ) : (
+              <div className={viewMode === 'grid' ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-10" : "flex flex-col gap-6"}>
+                {filteredNews.map((item, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`group bg-white rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-2xl hover:border-indigo-100 transition-all duration-700 overflow-hidden flex flex-col relative ${
+                      viewMode === 'grid' ? 'hover:-translate-y-3' : 'sm:flex-row min-h-[220px]'
+                    }`}
+                  >
+                    {/* Visual Accent */}
+                    <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-transparent via-[var(--cms-accent)] to-transparent opacity-0 group-hover:opacity-100 transition-all duration-700" />
+                    
+                    <div className={`${viewMode === 'grid' ? 'p-10 pb-6' : 'p-10 flex-1'} flex flex-col`}>
+                      <div className="flex items-start justify-between mb-8">
+                          <div className="flex flex-wrap gap-2">
+                             {(item.logoUrl || item.source) && (
+                               <div className="h-8 px-4 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-sm overflow-hidden min-w-[60px]">
+                                 <img 
+                                   src={item.logoUrl || `https://www.google.com/s2/favicons?domain=${item.source.toLowerCase().replace(/\s+/g, '')}${item.source.includes('.') ? '' : '.com'}&sz=128`} 
+                                   alt={item.source} 
+                                   className="h-4 w-auto object-contain transition-transform duration-500 group-hover:scale-110" 
+                                   onError={(e) => { 
+                                     if (!e.target.dataset.tried) {
+                                       e.target.dataset.tried = "1";
+                                       e.target.src = `https://www.google.com/s2/favicons?domain=${item.source.split('.')[0]}.com&sz=128`;
+                                     } else if (e.target.dataset.tried === "1") {
+                                       e.target.dataset.tried = "2";
+                                       e.target.src = `https://icon.horse/icon/${item.source.toLowerCase().replace(/\s+/g, '')}${item.source.includes('.') ? '' : '.com'}`;
+                                     } else {
+                                       e.target.style.display = 'none'; 
+                                       e.target.parentElement.innerHTML = `<span class="text-[10px] font-black text-indigo-400 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">${item.source}</span>`; 
+                                     }
+                                   }}
+                                 />
+                               </div>
+                             )}
+                             <span className="px-3 py-1 bg-white text-gray-700 rounded-lg text-[10px] font-black border border-gray-200">
+                               {new Date(item.pubDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' })}
+                             </span>
+                          </div>
+                          <button 
+                            onClick={(e) => { e.preventDefault(); toggleBookmark(item.id); }}
+                            className={`p-2.5 rounded-xl transition-all ${item.isBookmarked ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:text-black border border-gray-200'}`}
+                          >
+                            {item.isBookmarked ? <BookmarkCheck size={16} fill="currentColor" /> : <Bookmark size={16} />}
+                          </button>
+                      </div>
+
+                      <h3 className="text-xl font-[900] text-black tracking-tight leading-[1.2] mb-5 group-hover:text-indigo-600 transition-colors duration-500 font-brand">
+                        {item.title}
+                      </h3>
+                      
+                      <p className="text-[13.5px] font-semibold text-gray-700 line-clamp-2 leading-relaxed mb-8 opacity-80 group-hover:opacity-100 transition-all duration-500">
+                        {item.content?.replace(/<[^>]*>?/gm, '')}
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-3 mt-auto pt-6 border-t border-gray-50">
+                        {/* Signal Highlights: The Primary Intelligence Vector */}
+                        {(item.categories || []).filter(cat => SIGNAL_TYPES.includes(cat)).map((cat, i) => (
+                          <div key={`sig-${i}`} className="px-5 py-2.5 bg-black text-white text-[11px] font-black rounded-2xl flex items-center gap-3 border-2 border-indigo-500/30 shadow-xl shadow-indigo-500/10 animate-in zoom-in-95 duration-500">
+                            <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-pulse shadow-[0_0_12px_rgba(129,140,248,0.8)]" />
+                            {cat === 'Funding' ? '💰 ' + cat : cat === 'Acquisition' ? '🤝 ' + cat : cat === 'Shutdown' ? '🛑 ' + cat : cat}
+                          </div>
+                        ))}
+
+                        {/* Industry Footprints: The Secondary Context Vector */}
+                        {(item.categories || []).filter(cat => !SIGNAL_TYPES.includes(cat) && cat !== 'Other / Unclassified').map((cat, i) => (
+                          <div key={`ind-${i}`} className="px-4 py-2 bg-gray-100 text-[10px] font-black text-gray-700 rounded-xl border border-gray-300">
+                            {cat}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-
-                    <h3 className="text-xl font-[900] text-black tracking-tight leading-[1.2] mb-5 group-hover:text-indigo-600 transition-colors duration-500 font-brand">
-                      {item.title}
-                    </h3>
                     
-                    <p className="text-[13.5px] font-semibold text-gray-700 line-clamp-2 leading-relaxed mb-8 opacity-80 group-hover:opacity-100 transition-all duration-500">
-                      {item.content?.replace(/<[^>]*>?/gm, '')}
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-3 mt-auto pt-6 border-t border-gray-50">
-                      {/* Signal Highlights: The Primary Intelligence Vector */}
-                      {(item.categories || []).filter(cat => SIGNAL_TYPES.includes(cat)).map((cat, i) => (
-                        <div key={`sig-${i}`} className="px-5 py-2.5 bg-black text-white text-[11px] font-black rounded-2xl flex items-center gap-3 border-2 border-indigo-500/30 shadow-xl shadow-indigo-500/10 animate-in zoom-in-95 duration-500">
-                          <div className="w-2.5 h-2.5 bg-indigo-400 rounded-full animate-pulse shadow-[0_0_12px_rgba(129,140,248,0.8)]" />
-                          {cat === 'Funding' ? '💰 ' + cat : cat === 'Acquisition' ? '🤝 ' + cat : cat === 'Shutdown' ? '🛑 ' + cat : cat}
-                        </div>
-                      ))}
-
-                      {/* Industry Footprints: The Secondary Context Vector */}
-                      {(item.categories || []).filter(cat => !SIGNAL_TYPES.includes(cat) && cat !== 'Other / Unclassified').map((cat, i) => (
-                        <div key={`ind-${i}`} className="px-4 py-2 bg-gray-100 text-[10px] font-black text-gray-700 rounded-xl border border-gray-300">
-                          {cat}
-                        </div>
-                      ))}
+                    <div className={`p-6 bg-gray-50/40 border-t border-gray-100 flex gap-3 ${
+                      viewMode === 'grid' ? '' : 'sm:border-t-0 sm:border-l sm:w-56 flex-col justify-center'
+                    }`}>
+                            <a 
+                        href={item.link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex-1 h-12 bg-white border border-gray-300 text-black font-black text-[11px] rounded-2xl hover:bg-black hover:text-white hover:border-black transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+                      >
+                        <ExternalLink size={12} />
+                        Voice
+                      </a>
+                      <button 
+                        onClick={() => handleImport(item)}
+                        className="flex-1 h-12 bg-black text-white font-black text-[11px] rounded-2xl hover:scale-[1.05] shadow-xl shadow-black/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                      >
+                        <Send size={12} className="text-indigo-400" />
+                        Inject
+                      </button>
                     </div>
                   </div>
-                  
-                  <div className={`p-6 bg-gray-50/40 border-t border-gray-100 flex gap-3 ${
-                    viewMode === 'grid' ? '' : 'sm:border-t-0 sm:border-l sm:w-56 flex-col justify-center'
-                  }`}>
-                          <a 
-                      href={item.link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex-1 h-12 bg-white border border-gray-300 text-black font-black text-[11px] rounded-2xl hover:bg-black hover:text-white hover:border-black transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+                ))}
+              </div>
+            )
+          ) : (
+            // TRENDING TAB CONTENT
+            loadingTrending ? (
+              <div className="flex flex-col items-center justify-center py-48 gap-8 animate-in fade-in duration-500">
+                 <div className="relative">
+                   <div className="w-24 h-24 border-4 border-indigo-100 rounded-full animate-ping absolute opacity-30"></div>
+                   <div className="w-24 h-24 border-4 border-t-indigo-600 border-transparent rounded-full animate-spin"></div>
+                   <Sparkles className="absolute inset-0 m-auto text-indigo-600 animate-pulse" size={32} />
+                 </div>
+                 <div className="text-center space-y-2">
+                   <h3 className="text-2xl font-black text-black tracking-tighter">AI Trend Detection Active</h3>
+                   <p className="text-[10px] font-bold text-gray-400 mt-1">Cross-referencing signals across social platforms...</p>
+                 </div>
+              </div>
+            ) : trendingTopics.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-48 gap-6 opacity-40">
+                 <Sparkles size={80} className="text-gray-200" />
+                 <div className="text-center">
+                   <h2 className="text-2xl font-black text-gray-300 tracking-tighter">No Trends Detected</h2>
+                   <p className="text-[10px] font-bold text-gray-200 mt-2">The AI found no highly active topics in the recent timeframe.</p>
+                 </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-8 animate-in slide-in-from-bottom-4 duration-700">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-600/20 shrink-0">
+                      <Sparkles size={24} />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-[900] tracking-tighter text-black leading-none">AI Trend Analysis</h2>
+                      <p className="text-[11px] font-bold text-gray-500 mt-1">Detected from high-velocity signals across multiple platforms</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <select 
+                      value={trendingFilterDate} 
+                      onChange={e => setTrendingFilterDate(e.target.value)}
+                      className="bg-white border border-gray-200 text-gray-700 text-[11px] font-black rounded-xl px-4 py-2.5 outline-none cursor-pointer hover:border-indigo-300 transition-all shadow-sm"
                     >
-                      <ExternalLink size={12} />
-                      Voice
-                    </a>
-                    <button 
-                      onClick={() => handleImport(item)}
-                      className="flex-1 h-12 bg-black text-white font-black text-[11px] rounded-2xl hover:scale-[1.05] shadow-xl shadow-black/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                      <option value="1">Last 24 Hours</option>
+                      <option value="3">Last 3 Days</option>
+                      <option value="7">Last 7 Days</option>
+                      <option value="30">Last 30 Days</option>
+                    </select>
+                    <select 
+                      value={trendingFilterStatus} 
+                      onChange={e => setTrendingFilterStatus(e.target.value)}
+                      className="bg-white border border-gray-200 text-gray-700 text-[11px] font-black rounded-xl px-4 py-2.5 outline-none cursor-pointer hover:border-indigo-300 transition-all shadow-sm"
                     >
-                      <Send size={12} className="text-indigo-400" />
-                      Inject
-                    </button>
+                      <option value="ALL">All Trends</option>
+                      <option value="HIGHLY TRENDING">Highly Trending</option>
+                      <option value="TRENDING">Trending Only</option>
+                    </select>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {trendingTopics.filter(t => trendingFilterStatus === 'ALL' || t.status === trendingFilterStatus).length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 opacity-50">
+                    <p className="text-sm font-bold text-gray-400">No topics match these filters.</p>
+                  </div>
+                ) : (
+                  trendingTopics.filter(t => trendingFilterStatus === 'ALL' || t.status === trendingFilterStatus).map((topic, idx) => (
+                  <div key={idx} className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm p-10 relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-80" />
+                    
+                    <div className="flex flex-col md:flex-row gap-10">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-4 mb-6">
+                          <span className={`px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest ${topic.status === 'HIGHLY TRENDING' ? 'bg-red-100 text-red-600 border border-red-200' : 'bg-indigo-100 text-indigo-600 border border-indigo-200'}`}>
+                            {topic.status}
+                          </span>
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                            Trend Score: {topic.score}/12
+                          </span>
+                          <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                            <Clock size={12} /> Momentum: {topic.momentum}
+                          </span>
+                        </div>
+                        
+                        <h3 className="text-3xl font-[900] text-black tracking-tight leading-[1.1] mb-6 font-brand">{topic.topic}</h3>
+                        
+                        <div className="space-y-4 mb-8">
+                          <h4 className="text-[11px] font-black text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-2">Why it is trending</h4>
+                          <ul className="space-y-2">
+                            {topic.reasons.map((r, i) => (
+                              <li key={i} className="text-[13px] font-medium text-gray-700 flex items-start gap-2">
+                                <CheckCircle2 size={16} className="text-indigo-400 mt-0.5 shrink-0" />
+                                {r}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <div className="space-y-4 bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                          <h4 className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Suggested Angles</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                              <span className="block text-[10px] font-black text-indigo-600 mb-1">PR Angle</span>
+                              <p className="text-[12px] font-medium text-gray-700">{topic.angles.pr}</p>
+                            </div>
+                            <div>
+                              <span className="block text-[10px] font-black text-pink-600 mb-1">Content Angle</span>
+                              <p className="text-[12px] font-medium text-gray-700">{topic.angles.content}</p>
+                            </div>
+                            <div>
+                              <span className="block text-[10px] font-black text-amber-600 mb-1">Hook</span>
+                              <p className="text-[12px] font-medium text-gray-700 italic">"{topic.angles.hook}"</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="w-full md:w-64 space-y-6">
+                        <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                           <h4 className="text-[11px] font-black text-gray-800 uppercase tracking-widest mb-4">Platforms Detected</h4>
+                           <div className="space-y-3">
+                             {Object.entries(topic.platforms).map(([platform, active]) => (
+                               <div key={platform} className="flex items-center justify-between">
+                                 <span className="text-[12px] font-bold text-gray-600 capitalize">
+                                   {platform === 'googleTrends' ? 'Google Trends' : platform}
+                                 </span>
+                                 {active ? (
+                                   <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-md text-[10px] font-black">YES</span>
+                                 ) : (
+                                   <span className="px-2 py-0.5 bg-gray-100 text-gray-400 rounded-md text-[10px] font-black">NO</span>
+                                 )}
+                               </div>
+                             ))}
+                           </div>
+                        </div>
+                        
+                        {topic.relatedSignals && topic.relatedSignals.length > 0 ? (
+                           <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                             <h4 className="text-[11px] font-black text-gray-800 uppercase tracking-widest mb-4">Coverage Sources</h4>
+                             <div className="space-y-2 max-h-[200px] overflow-y-auto custom-scrollbar pr-2">
+                               {topic.relatedSignals.map((signal, sIdx) => (
+                                 <a 
+                                   key={sIdx}
+                                   href={signal.link} 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   className="group/link flex items-center justify-between p-2.5 hover:bg-gray-50 rounded-xl transition-all border border-transparent hover:border-gray-200"
+                                   title={signal.title}
+                                 >
+                                   <div className="flex flex-col min-w-0 pr-2">
+                                     <span className="text-[12px] font-[900] text-black truncate group-hover/link:text-indigo-600 transition-colors">
+                                       {signal.source}
+                                     </span>
+                                     <span className="text-[10px] font-bold text-gray-400 truncate mt-0.5">
+                                       {new Date(signal.pubDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                                     </span>
+                                   </div>
+                                   <ExternalLink size={12} className="text-gray-300 group-hover/link:text-indigo-500 shrink-0" />
+                                 </a>
+                               ))}
+                             </div>
+                           </div>
+                        ) : (
+                          topic.link && (
+                            <a 
+                              href={topic.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="w-full h-12 bg-white border border-gray-300 text-black font-black text-[11px] rounded-2xl hover:bg-black hover:text-white hover:border-black transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+                            >
+                              <ExternalLink size={12} />
+                              Read Original Signal
+                            </a>
+                          )
+                        )}
+                        <button 
+                          onClick={() => handleImport(topic)}
+                          className="w-full h-14 bg-black text-white font-black text-[12px] rounded-2xl hover:scale-[1.02] shadow-xl shadow-black/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <Send size={14} className="text-indigo-400" />
+                          Inject into Editor
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )))}
+              </div>
+            )
           )}
           <div className="h-20" />
         </main>

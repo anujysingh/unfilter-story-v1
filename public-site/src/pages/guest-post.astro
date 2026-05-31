@@ -1,0 +1,12 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../react-app/components/Header';
+import Footer from '../react-app/components/Footer';
+import GuestPost from '../react-app/pages/GuestPost';
+---
+
+<Layout title="Community Guest Posts | Unfilter Story">
+  <Header client:load />
+  <GuestPost client:load />
+  <Footer client:load />
+</Layout>

@@ -1,7 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
+import Header from '../react-app/components/Header';
+import Footer from '../react-app/components/Footer';
+import AboutUs from '../react-app/pages/AboutUs';
 
 let settings = {};
 try {
@@ -10,25 +11,14 @@ try {
     settings = await res.json();
   }
 } catch (e) {
-  // ignore
+  console.error("Failed to fetch settings:", e.message);
 }
 
-const aboutContent = settings.aboutUs || `<p>Our About Us page is currently being updated. Please check back later.</p>`;
+const aboutContent = settings.aboutUs || "";
 ---
 
 <Layout title="About Us | Unfilter Story">
-  <Header />
-  
-  <main class="flex-1 w-full max-w-4xl mx-auto px-4 md:px-8 py-16 lg:py-24">
-    <div class="mb-12 border-b border-gray-100 pb-8">
-      <h1 class="text-4xl md:text-5xl font-playfair font-black text-[#1A1A2E] mb-4">About Us</h1>
-    </div>
-
-    <div 
-        class="prose prose-lg max-w-none font-inter text-gray-700"
-        set:html={aboutContent}
-    />
-  </main>
-
-  <Footer />
+  <Header client:load />
+  <AboutUs client:load content={aboutContent} />
+  <Footer client:load />
 </Layout>

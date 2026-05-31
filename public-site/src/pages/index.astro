@@ -1,7 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
+import Header from '../react-app/components/Header';
+import Footer from '../react-app/components/Footer';
+import Home from '../react-app/pages/Home';
 
 // Fetch articles from our Fastify backend running on port 3000
 let articles = [];
@@ -13,129 +14,10 @@ try {
 } catch (e) {
   console.error("Failed to fetch articles:", e.message);
 }
-
-// Separate the first article as featured, and the rest for a grid
-const featuredStory = articles.length > 0 ? articles[0] : null;
-const gridStories = articles.slice(1, 4); 
-
-// Fallback values if DB is empty
-const fallbackFeatured = {
-	headline: "The Ultimate Pivot: How India's Oldest AI Startup Navigated The Market Shift",
-	body: "After ten years of building enterprise solutions, a major product pivot last quarter finally caught Silicon Valley's attention. Exclusive full interview with the founders.",
-	category: "Startups",
-	author: "Kritika S",
-	readingTimeMins: 6,
-    publishedAt: new Date().toISOString()
-};
-
-const displayFeatured = featuredStory || fallbackFeatured;
-const isFallback = !featuredStory;
-
-const trendingNews = [
-	{ title: "Zomato announces major restructuring block for fresh delivery vertical", time: "2 hours ago" },
-	{ title: "Tesla officially confirms India gigafactory location near Pune", time: "4 hours ago" },
-	{ title: "Reserve Bank of India to issue new guidelines for fintech lenders", time: "6 hours ago" },
-	{ title: "TCS quarterly earnings beat estimates despite macro headwinds", time: "10 hours ago" }
-];
 ---
 
 <Layout title="Unfilter Story | Authentic Startup & Tech News">
-	<Header />
-	
-	<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 lg:py-12">
-        {isFallback && (
-            <div class="mb-8 p-4 bg-blue-50 text-blue-800 rounded-md border border-blue-200">
-                <strong>No articles in database yet!</strong> You are seeing placeholder data. Go to the CMS Admin panel and publish an article to see it appear here live!
-            </div>
-        )}
-
-		<!-- Hero Area: Featured Story + Trending -->
-		<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16">
-			
-			<!-- Main Featured Article -->
-			<article class="lg:col-span-8 group cursor-pointer flex flex-col">
-				<div class="relative w-full aspect-video overflow-hidden rounded-xl bg-gray-200 mb-6 flex items-center justify-center">
-                    {displayFeatured.featuredImageUrl ? (
-                        <img src={displayFeatured.featuredImageUrl} class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={displayFeatured.headline} />
-                    ) : (
-                        <span class="text-gray-400 font-medium font-inter uppercase tracking-widest text-xs">No Header Image</span>
-                    )}
-				</div>
-				<div class="flex items-center space-x-3 mb-3">
-					<span class="font-inter text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-sm text-[#E94560] bg-[#FEF2F2]">
-						{displayFeatured.category || 'Startups'}
-					</span>
-					<span class="text-xs text-gray-500 font-inter">{displayFeatured.readingTimeMins} min read</span>
-				</div>
-				<h1 class="text-3xl md:text-5xl font-playfair font-black text-[#1A1A2E] mb-4 leading-tight group-hover:underline decoration-[#E94560] decoration-2 underline-offset-4">
-					<a href={`/article/${displayFeatured.slug || 'featured'}`}>{displayFeatured.headline}</a>
-				</h1>
-				<div 
-					class="text-base md:text-lg text-gray-800 font-inter mb-4 leading-relaxed max-w-3xl prose prose-gray line-clamp-3"
-					set:html={displayFeatured.body}
-				/>
-				<div class="text-sm font-medium font-inter text-gray-900 mt-auto">
-					By <span class="text-[#E94560]">{displayFeatured.author || 'Editorial Team'}</span> · <span class="text-gray-500 font-normal">{new Date(displayFeatured.publishedAt).toLocaleDateString()}</span>
-				</div>
-			</article>
-
-			<!-- Trending / Top News Sidebar -->
-			<aside class="lg:col-span-4 flex flex-col">
-				<div class="bg-white p-6 rounded-xl border border-gray-200 h-full shadow-sm sticky top-24">
-					<div class="flex items-center mb-6">
-						<div class="w-3 h-3 rounded-full bg-[#E94560] mr-2 animate-pulse"></div>
-						<h3 class="text-xl font-bold font-playfair uppercase tracking-wide">Trending Now</h3>
-					</div>
-					
-					<div class="space-y-0 relative before:content-[''] before:absolute before:left-[5px] before:top-2 before:bottom-6 before:w-[2px] before:bg-gray-100">
-						{trendingNews.map((news, idx) => (
-							<div class="relative pl-6 pb-6 last:pb-0">
-								<div class="absolute left-0 top-1.5 w-[12px] h-[12px] bg-white border-2 border-gray-300 rounded-full z-10 transition-colors group-hover:border-[#E94560]"></div>
-								<a href="#" class="block group">
-									<h4 class="text-[17px] font-playfair font-bold text-gray-900 leading-snug group-hover:text-[#E94560] transition-colors mb-1">
-										{news.title}
-									</h4>
-									<p class="text-xs text-gray-500 font-inter">{news.time}</p>
-								</a>
-							</div>
-						))}
-					</div>
-				</div>
-			</aside>
-		</div>
-
-		 <!-- Latest Grid -->
-         {gridStories.length > 0 && (
-            <div class="mb-16">
-                <h2 class="text-3xl font-playfair font-black text-[#1A1A2E] mb-8 border-b-2 border-gray-100 pb-2">Latest News</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {gridStories.map(story => (
-                        <a href={`/article/${story.slug}`} class="block group cursor-pointer">
-                            <article>
-                                <div class="w-full aspect-[4/3] bg-gray-100 rounded-lg mb-4 overflow-hidden relative border border-gray-100">
-                                    {story.featuredImageUrl ? (
-                                        <img src={story.featuredImageUrl} class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt={story.headline} />
-                                    ) : (
-                                        <div class="flex items-center justify-center w-full h-full">
-                                            <span class="text-gray-400 text-[10px] font-black uppercase tracking-widest px-4">No Image</span>
-                                        </div>
-                                    )}
-                                </div>
-                                <h3 class="text-xl font-bold font-playfair text-gray-900 group-hover:text-[#E94560] transition-colors mb-2 line-clamp-2">
-                                    {story.headline}
-                                </h3>
-                                <div 
-                                    class="text-gray-600 text-sm font-inter line-clamp-3 mb-3 prose prose-sm prose-gray max-w-none"
-                                    set:html={story.body}
-                                />
-                                <span class="text-xs text-gray-500 font-inter">{new Date(story.publishedAt).toLocaleDateString()}</span>
-                            </article>
-                        </a>
-                    ))}
-                </div>
-            </div>
-         )}
-	</main>
-
-	<Footer />
+	<Header client:load />
+	<Home client:load articles={articles} />
+	<Footer client:load />
 </Layout>
