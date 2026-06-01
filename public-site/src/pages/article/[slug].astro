@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import { API_URL } from '../../lib/config.js';
 import Header from '../../react-app/components/Header';
 import Footer from '../../react-app/components/Footer';
 import StoryDetail from '../../react-app/pages/StoryDetail';
@@ -11,13 +12,8 @@ let relatedStories = [];
 let errorMsg = null;
 
 try {
-<<<<<<< HEAD
-  // Fetch the article details
-  const response = await fetch(`http://localhost:3000/v1/articles/${slug}`);
-=======
   // Try fetching the article using the backend's new single-slug public routing API
   const response = await fetch(`${API_URL}/v1/articles/${slug}`);
->>>>>>> mine/main
   if (response.ok) {
     article = await response.json();
   } else {
@@ -25,7 +21,7 @@ try {
   }
 
   // Fetch other articles as related recommendations
-  const allRes = await fetch('http://localhost:3000/v1/articles');
+  const allRes = await fetch(`${API_URL}/v1/articles`);
   if (allRes.ok) {
     const all = await allRes.json();
     relatedStories = all.filter(a => a.slug !== slug).slice(0, 3);

@@ -355,12 +355,7 @@ fastify.post('/cms/v1/ai/transform', async (request, reply) => {
     const modelName = model === 'gemini' ? 'Gemini/Gemma' : 'GPT-4o mini'
 
     return reply.code(500).send({
-<<<<<<< HEAD
-      error: userMessage,
-      details: error.stack
-=======
       error: userMessage
->>>>>>> mine/main
     })
   }
 })
@@ -744,12 +739,6 @@ fastify.get('/cms/v1/users', async (request, reply) => {
 
 fastify.post('/cms/v1/users', { preHandler: requireRole('Admin') }, async (request, reply) => {
   try {
-<<<<<<< HEAD
-    const { email, firstName, lastName, role, designation } = request.body
-
-    // In a real app, we'd send an invite email and hash a temporary password
-    // For this build, we'll create a placeholder user
-=======
     const { email, firstName, lastName, role, designation, password } = request.body
 
     if (!email || !password) {
@@ -760,7 +749,6 @@ fastify.post('/cms/v1/users', { preHandler: requireRole('Admin') }, async (reque
     }
 
     const passwordHash = await bcrypt.hash(password, 12)
->>>>>>> mine/main
     const user = await prisma.cmsUser.create({
       data: {
         email,
