@@ -1,7 +1,10 @@
 import { useState, useRef } from "react";
 import { Play, Clock, Calendar, TrendingUp, ArrowRight, ChevronLeft, ChevronRight, FileText, Headphones, Sparkles, ExternalLink, User, Send, CheckCircle2 } from "lucide-react";
 import { ImageWithFallback } from "../components/figma/ImageWithFallback";
-import Slider from "react-slick";
+import SliderImport from "react-slick";
+// react-slick is CommonJS; under Astro SSR the default import is wrapped as
+// { default: Slider }, while the client build unwraps it. Normalize for both.
+const Slider = ((SliderImport as any).default ?? SliderImport) as typeof SliderImport;
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
