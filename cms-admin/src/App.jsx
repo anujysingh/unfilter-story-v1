@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext.jsx'
+import Login from './pages/Login'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Articles from './pages/Articles'
@@ -23,13 +24,35 @@ function Error404() {
   )
 }
 
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth()
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-gray-500">
+        Loading…
+      </div>
+    )
+  }
+  if (!isAuthenticated) return <Navigate to="/login" replace />
+  return children
+}
+
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="articles" element={<Articles />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<Dashboard />} />
+            <Route path="articles" element={<Articles />} />
           <Route path="articles/new" element={<ArticleEditor />} />
           <Route path="articles/:id" element={<ArticleEditor />} />
           <Route path="media" element={<Media />} />
@@ -42,9 +65,10 @@ function App() {
           <Route path="ai-studio" element={<AIStudio />} />
           <Route path="contact" element={<ContactMessages />} />
           <Route path="*" element={<Error404 />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }
 

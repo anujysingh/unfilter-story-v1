@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api.js';
 import React, { useState, useEffect } from 'react'
 import { Plus, Search, Filter, MoreHorizontal, CheckCircle2, Clock, Calendar, ArrowRight, History, X, Tag as TagIcon, LayoutGrid, AlertTriangle, Send, Edit3, XCircle, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -34,7 +35,7 @@ export default function Articles() {
   const [republishModal, setRepublishModal] = useState({ open: false, articleId: null, mode: 'now', scheduleDate: '', scheduleTime: '', label: 'Republish' })
 
   const fetchArticles = () => {
-    fetch('http://localhost:3000/cms/v1/articles')
+    apiFetch(`/cms/v1/articles`)
       .then(res => res.json())
       .then(data => {
         setArticles(data || [])
@@ -47,12 +48,12 @@ export default function Articles() {
   }
 
   const fetchCategoriesAndTags = () => {
-    fetch('http://localhost:3000/cms/v1/categories')
+    apiFetch(`/cms/v1/categories`)
       .then(res => res.json())
       .then(data => setAllCategories(data || []))
       .catch(err => console.error('Failed to fetch categories', err))
 
-    fetch('http://localhost:3000/cms/v1/tags')
+    apiFetch(`/cms/v1/tags`)
       .then(res => res.json())
       .then(data => setAllTags(data || []))
       .catch(err => console.error('Failed to fetch tags', err))
@@ -93,7 +94,7 @@ export default function Articles() {
       confirmText: 'Yes, Unpublish',
       onConfirm: async () => {
         try {
-          await fetch(`http://localhost:3000/cms/v1/articles/${id}`, { 
+          await apiFetch(`/cms/v1/articles/${id}`, { 
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: 'unpublished' })
@@ -123,7 +124,7 @@ export default function Articles() {
     const { articleId, mode, scheduleDate, scheduleTime } = republishModal
     try {
       if (mode === 'now') {
-        await fetch(`http://localhost:3000/cms/v1/articles/${articleId}`, {
+        await apiFetch(`/cms/v1/articles/${articleId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -134,7 +135,7 @@ export default function Articles() {
       } else {
         if (!scheduleDate || !scheduleTime) return
         const scheduledDateTime = new Date(`${scheduleDate}T${scheduleTime}`)
-        await fetch(`http://localhost:3000/cms/v1/articles/${articleId}`, {
+        await apiFetch(`/cms/v1/articles/${articleId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -159,7 +160,7 @@ export default function Articles() {
       confirmText: 'Cancel Scheduling',
       onConfirm: async () => {
         try {
-          await fetch(`http://localhost:3000/cms/v1/articles/${id}`, { 
+          await apiFetch(`/cms/v1/articles/${id}`, { 
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: 'draft' })
@@ -180,7 +181,7 @@ export default function Articles() {
       const today = new Date().toISOString().split('T')[0]
       const targetStatus = newPublishDate > today ? 'scheduled' : 'published'
       
-      await fetch(`http://localhost:3000/cms/v1/articles/${datePickerId}`, { 
+      await apiFetch(`/cms/v1/articles/${datePickerId}`, { 
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 

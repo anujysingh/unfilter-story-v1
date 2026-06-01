@@ -5,6 +5,8 @@ import 'dotenv/config'
 import Parser from 'rss-parser'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import Bytez from 'bytez.js'
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcryptjs'
 
 const parser = new Parser({
   headers: {
@@ -24,10 +26,180 @@ const prisma = new PrismaClient()
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null
 const bytez = process.env.BYTEZ_API_KEY ? new Bytez(process.env.BYTEZ_API_KEY) : null
 
-// Register CORS
+// Register CORS.
+// In production, set ALLOWED_ORIGINS to a comma-separated list of frontend
+// origins (e.g. "https://unfilter-story-v1.vercel.app,https://admin.example.com").
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim()).filter(Boolean)
+  : null
+if (!allowedOrigins && process.env.NODE_ENV === 'production') {
+  // Never silently fall back to allow-all in production.
+  throw new Error('ALLOWED_ORIGINS must be set in production')
+}
 fastify.register(cors, {
-  origin: '*', // For local dev
+  // Dev (no env var): reflect any origin. Prod: strict allowlist.
+  origin: allowedOrigins ?? true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+})
+
+// === AUTH ===
+const JWT_SECRET = process.env.JWT_SECRET
+if (!JWT_SECRET) {
+  // Fail fast: the auth layer is useless (and insecure) without a secret.
+  throw new Error('JWT_SECRET environment variable is required')
+}
+const JWT_EXPIRES_IN = '12h'
+const JWT_ALG = 'HS256'
+
+// CMS routes that must remain reachable WITHOUT a token.
+// These are read-only endpoints consumed by the public site, plus login itself.
+const PUBLIC_CMS_ROUTES = [
+  { method: 'POST', path: '/cms/v1/auth/login' },
+  { method: 'GET', path: '/cms/v1/settings' },
+  { method: 'GET', path: '/cms/v1/rss/fetch' }
+]
+
+// Lightweight in-memory brute-force throttle for the login route. Keyed by
+// email+IP, resets after the window. Single-instance only (fine for this app).
+const LOGIN_MAX_ATTEMPTS = 10
+const LOGIN_WINDOW_MS = 15 * 60 * 1000
+const loginAttempts = new Map()
+function isLoginRateLimited(key) {
+  const now = Date.now()
+  const rec = loginAttempts.get(key)
+  if (!rec || now - rec.first > LOGIN_WINDOW_MS) {
+    loginAttempts.set(key, { count: 1, first: now })
+    return false
+  }
+  rec.count += 1
+  return rec.count > LOGIN_MAX_ATTEMPTS
+}
+
+// Role guard factory for routes that require elevated privileges.
+function requireRole(...roles) {
+  return async (request, reply) => {
+    if (!roles.includes(request.user?.role)) {
+      return reply.code(403).send({ error: 'Insufficient permissions' })
+    }
+  }
+}
+
+// Auth guard: require a valid Bearer JWT for every /cms/v1 route except the
+// allowlist above. Public /v1 routes and CORS preflight pass through untouched.
+fastify.addHook('preHandler', async (request, reply) => {
+  if (request.method === 'OPTIONS') return
+
+  // Normalise trailing slashes before matching the allowlist.
+  const path = request.url.split('?')[0].replace(/\/+$/, '') || '/'
+  if (!path.startsWith('/cms/v1')) return
+
+  const isPublic = PUBLIC_CMS_ROUTES.some(
+    (r) => r.method === request.method && r.path === path
+  )
+  if (isPublic) return
+
+  const header = request.headers.authorization || ''
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null
+  if (!token) {
+    return reply.code(401).send({ error: 'Authentication required' })
+  }
+
+  let payload
+  try {
+    payload = jwt.verify(token, JWT_SECRET, { algorithms: [JWT_ALG] })
+  } catch {
+    return reply.code(401).send({ error: 'Invalid or expired token' })
+  }
+
+  // Re-validate against the DB so deactivated accounts lose access immediately
+  // and the role used for authorization is always current (not the stale token).
+  const account = await prisma.cmsUser.findUnique({
+    where: { id: payload.sub },
+    select: { id: true, email: true, role: true, isActive: true }
+  })
+  if (!account || !account.isActive) {
+    return reply.code(401).send({ error: 'Account is inactive' })
+  }
+  request.user = account
+})
+
+// POST /cms/v1/auth/login — verify credentials, issue a JWT.
+fastify.post('/cms/v1/auth/login', async (request, reply) => {
+  try {
+    const { email, password } = request.body || {}
+    if (!email || !password) {
+      return reply.code(400).send({ error: 'Email and password are required' })
+    }
+
+    const attemptKey = `${String(email).toLowerCase()}|${request.ip}`
+    if (isLoginRateLimited(attemptKey)) {
+      return reply.code(429).send({ error: 'Too many login attempts. Try again later.' })
+    }
+
+    const user = await prisma.cmsUser.findUnique({ where: { email } })
+    // Always run a bcrypt comparison (even for unknown/inactive accounts) so the
+    // response time does not reveal whether the email exists or is active.
+    const DUMMY_HASH = '$2a$12$0000000000000000000000000000000000000000000000000000u'
+    const ok = await bcrypt.compare(password, user?.passwordHash || DUMMY_HASH)
+    if (!user || !user.isActive || !ok) {
+      return reply.code(401).send({ error: 'Invalid credentials' })
+    }
+
+    // Successful login — reset the throttle for this key.
+    loginAttempts.delete(attemptKey)
+
+    await prisma.cmsUser.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() }
+    })
+
+    const token = jwt.sign(
+      { sub: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN, algorithm: JWT_ALG }
+    )
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      }
+    }
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Login failed' })
+  }
+})
+
+// GET /cms/v1/auth/me — return the current authenticated user (token validated
+// by the preHandler hook above).
+fastify.get('/cms/v1/auth/me', async (request, reply) => {
+  try {
+    // request.user (id, email, role, isActive) is set + validated by the
+    // preHandler guard; fetch the fuller profile for the client.
+    const user = await prisma.cmsUser.findUnique({
+      where: { id: request.user.id },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isActive: true
+      }
+    })
+    if (!user || !user.isActive) {
+      return reply.code(401).send({ error: 'Account is inactive' })
+    }
+    return user
+  } catch (error) {
+    fastify.log.error(error)
+    reply.code(500).send({ error: 'Failed to load profile' })
+  }
 })
 
 // === PUBLIC API ROUTES ===
@@ -183,8 +355,12 @@ fastify.post('/cms/v1/ai/transform', async (request, reply) => {
     const modelName = model === 'gemini' ? 'Gemini/Gemma' : 'GPT-4o mini'
 
     return reply.code(500).send({
+<<<<<<< HEAD
       error: userMessage,
       details: error.stack
+=======
+      error: userMessage
+>>>>>>> mine/main
     })
   }
 })
@@ -545,7 +721,19 @@ fastify.post('/cms/v1/navigation/reorder', async (request, reply) => {
 fastify.get('/cms/v1/users', async (request, reply) => {
   try {
     const users = await prisma.cmsUser.findMany({
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        designation: true,
+        isActive: true,
+        lastLoginAt: true,
+        createdAt: true,
+        updatedAt: true
+      }
     })
     return users
   } catch (error) {
@@ -554,12 +742,25 @@ fastify.get('/cms/v1/users', async (request, reply) => {
   }
 })
 
-fastify.post('/cms/v1/users', async (request, reply) => {
+fastify.post('/cms/v1/users', { preHandler: requireRole('Admin') }, async (request, reply) => {
   try {
+<<<<<<< HEAD
     const { email, firstName, lastName, role, designation } = request.body
 
     // In a real app, we'd send an invite email and hash a temporary password
     // For this build, we'll create a placeholder user
+=======
+    const { email, firstName, lastName, role, designation, password } = request.body
+
+    if (!email || !password) {
+      return reply.code(400).send({ error: 'Email and password are required' })
+    }
+    if (password.length < 8) {
+      return reply.code(400).send({ error: 'Password must be at least 8 characters' })
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12)
+>>>>>>> mine/main
     const user = await prisma.cmsUser.create({
       data: {
         email,
@@ -567,11 +768,13 @@ fastify.post('/cms/v1/users', async (request, reply) => {
         lastName,
         role: role || 'Editor',
         designation,
-        passwordHash: 'placeholder', // Required by schema
+        passwordHash,
         isActive: true
       }
     })
-    return user
+    // Never return the password hash to the client.
+    const { passwordHash: _omit, ...safeUser } = user
+    return safeUser
   } catch (error) {
     fastify.log.error(error)
     if (error.code === 'P2002') {
@@ -581,13 +784,25 @@ fastify.post('/cms/v1/users', async (request, reply) => {
   }
 })
 
-fastify.put('/cms/v1/users/:id', async (request, reply) => {
+fastify.put('/cms/v1/users/:id', { preHandler: requireRole('Admin') }, async (request, reply) => {
   try {
     const { id } = request.params
     const { role, isActive, designation } = request.body
     const user = await prisma.cmsUser.update({
       where: { id },
-      data: { role, isActive, designation }
+      data: { role, isActive, designation },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        designation: true,
+        isActive: true,
+        lastLoginAt: true,
+        createdAt: true,
+        updatedAt: true
+      }
     })
     return user
   } catch (error) {
@@ -596,7 +811,7 @@ fastify.put('/cms/v1/users/:id', async (request, reply) => {
   }
 })
 
-fastify.delete('/cms/v1/users/:id', async (request, reply) => {
+fastify.delete('/cms/v1/users/:id', { preHandler: requireRole('Admin') }, async (request, reply) => {
   try {
     const { id } = request.params
     await prisma.cmsUser.delete({ where: { id } })
@@ -679,7 +894,7 @@ fastify.get('/cms/v1/settings', async (request, reply) => {
   }
 });
 
-fastify.put('/cms/v1/settings', async (request, reply) => {
+fastify.put('/cms/v1/settings', { preHandler: requireRole('Admin') }, async (request, reply) => {
   try {
     const updates = request.body; // e.g. { "siteLogo": "...", "twitterUrl": "..." }
     const results = [];

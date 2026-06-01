@@ -1,7 +1,7 @@
 ---
 let settings = {};
 try {
-  const res = await fetch('http://localhost:3000/cms/v1/settings');
+  const res = await fetch(`${API_URL}/cms/v1/settings`);
   if (res.ok) {
     settings = await res.json();
   }

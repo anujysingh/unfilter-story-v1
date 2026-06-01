@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+<<<<<<< HEAD
 import Header from '../react-app/components/Header';
 import Footer from '../react-app/components/Footer';
 import ContactUs from '../react-app/pages/ContactUs';
@@ -9,4 +10,172 @@ import ContactUs from '../react-app/pages/ContactUs';
   <Header client:load />
   <ContactUs client:load />
   <Footer client:load />
+=======
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+let settings = {};
+try {
+  const res = await fetch(`${API_URL}/cms/v1/settings`);
+  if (res.ok) {
+    settings = await res.json();
+  }
+} catch (e) {
+  // ignore
+}
+---
+
+<Layout title="Contact Us | Unfilter Story">
+  <Header />
+
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-16 lg:py-24">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
+      
+      {/* Contact Info */}
+      <div class="space-y-8">
+        <div>
+          <h1 class="text-5xl md:text-6xl font-playfair font-black text-[#1A1A2E] leading-tight mb-6">Get in Touch</h1>
+          <p class="text-xl font-inter text-gray-500 leading-relaxed font-medium">
+            Whether you have a tip, a question, or a business inquiry, we're here to listen. Reach out to the Unfilter Story team.
+          </p>
+        </div>
+
+        <div class="space-y-6 pt-8 border-t border-gray-100">
+          <div>
+            <h3 class="text-sm font-extrabold uppercase tracking-widest text-gray-400 mb-2">Editorial</h3>
+            <a href="mailto:tips@unfilterstory.com" class="text-xl font-bold font-inter text-[#E94560] hover:text-[#1A1A2E] transition-colors">tips@unfilterstory.com</a>
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold uppercase tracking-widest text-gray-400 mb-2">Partnerships</h3>
+            <a href="mailto:partners@unfilterstory.com" class="text-xl font-bold font-inter text-[#E94560] hover:text-[#1A1A2E] transition-colors">partners@unfilterstory.com</a>
+          </div>
+        </div>
+
+        <div class="pt-8 border-t border-gray-100 flex items-center space-x-6">
+          {settings.twitterUrl && (
+            <a href={settings.twitterUrl} target="_blank" rel="noopener noreferrer" class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#1A1A2E] hover:border-[#1A1A2E] transition-all">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84" />
+              </svg>
+            </a>
+          )}
+          {settings.linkedinUrl && (
+            <a href={settings.linkedinUrl} target="_blank" rel="noopener noreferrer" class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#1A1A2E] hover:border-[#1A1A2E] transition-all">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd" />
+              </svg>
+            </a>
+          )}
+        </div>
+      </div>
+
+      {/* Contact Form */}
+      <div class="bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100 relative overflow-hidden">
+        
+        {/* Success State */}
+        <div id="success-state" class="hidden absolute inset-0 bg-[#f4fbf8] flex-col items-center justify-center p-8 text-center z-10 transition-opacity">
+          <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+          </div>
+          <h2 class="text-3xl font-black font-playfair text-[#1A1A2E] mb-4">Message Sent!</h2>
+          <p class="text-lg text-gray-600 font-inter mb-8">Thanks for reaching out. We'll get back to you shortly.</p>
+          <button type="button" id="form-reset" class="px-8 py-3 bg-[#1A1A2E] text-white font-bold rounded-xl hover:bg-[#E94560] transition-colors">Send Another</button>
+        </div>
+
+        <form id="contact-form" class="space-y-6 relative z-0">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label for="name" class="text-sm font-bold text-gray-700 font-inter">Full Name <span class="text-red-500">*</span></label>
+              <input type="text" id="name" required placeholder="Jane Doe" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-inter text-gray-900 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"/>
+            </div>
+            <div class="space-y-2">
+              <label for="email" class="text-sm font-bold text-gray-700 font-inter">Email Address <span class="text-red-500">*</span></label>
+              <input type="email" id="email" required placeholder="jane@example.com" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-inter text-gray-900 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"/>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label for="subject" class="text-sm font-bold text-gray-700 font-inter">Subject</label>
+            <input type="text" id="subject" placeholder="What is this regarding?" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-inter text-gray-900 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"/>
+          </div>
+
+          <div class="space-y-2">
+            <label for="message" class="text-sm font-bold text-gray-700 font-inter">Message <span class="text-red-500">*</span></label>
+            <textarea id="message" required rows="6" placeholder="How can we help you?" class="w-full bg-gray-50 border-none rounded-xl px-4 py-3 font-inter text-gray-900 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all resize-none"></textarea>
+          </div>
+
+          <div id="error-msg" class="hidden text-red-500 text-sm font-medium font-inter"></div>
+
+          <button type="submit" id="submit-btn" class="w-full bg-[#E94560] text-white font-extrabold text-lg rounded-xl px-8 py-4 hover:bg-[#1A1A2E] hover:scale-[1.02] active:scale-95 transition-all shadow-[0_8px_30px_rgba(233,69,96,0.3)] flex justify-center items-center">
+            <span>Send Message</span>
+            <svg id="submit-loader" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+
+  <script>
+    import { API_URL } from '../lib/config.js';
+
+    const form = document.getElementById('contact-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const loader = document.getElementById('submit-loader');
+    const successState = document.getElementById('success-state');
+    const errorMsg = document.getElementById('error-msg');
+    const resetBtn = document.getElementById('form-reset');
+
+    if (form) {
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        // UI Loading
+        submitBtn.setAttribute('disabled', 'true');
+        submitBtn.classList.add('opacity-80');
+        loader.classList.remove('hidden');
+        errorMsg.classList.add('hidden');
+
+        try {
+          const res = await fetch(`${API_URL}/v1/contact`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: document.getElementById('name').value,
+              email: document.getElementById('email').value,
+              subject: document.getElementById('subject').value,
+              message: document.getElementById('message').value
+            })
+          });
+
+          if (res.ok) {
+            successState.classList.remove('hidden');
+            successState.classList.add('flex');
+            form.reset();
+          } else {
+            throw new Error('Server error');
+          }
+        } catch (err) {
+          errorMsg.textContent = 'Sorry, there was a problem sending your message. Please try again.';
+          errorMsg.classList.remove('hidden');
+        } finally {
+          submitBtn.removeAttribute('disabled');
+          submitBtn.classList.remove('opacity-80');
+          loader.classList.add('hidden');
+        }
+      });
+    }
+
+    if (resetBtn) {
+      resetBtn.addEventListener('click', () => {
+        successState.classList.add('hidden');
+        successState.classList.remove('flex');
+      });
+    }
+  </script>
+>>>>>>> mine/main
 </Layout>

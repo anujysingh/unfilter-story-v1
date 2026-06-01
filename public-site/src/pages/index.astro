@@ -7,7 +7,7 @@ import Home from '../react-app/pages/Home';
 // Fetch articles from our Fastify backend running on port 3000
 let articles = [];
 try {
-  const response = await fetch('http://localhost:3000/v1/articles');
+  const response = await fetch(`${API_URL}/v1/articles`);
   if (response.ok) {
     articles = await response.json();
   }

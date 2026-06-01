@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api.js';
 import React, { useState, useEffect } from 'react'
 import { Plus, FolderTree, X, Edit2, Trash2 } from 'lucide-react'
 
@@ -18,8 +19,8 @@ export default function Taxonomy() {
     try {
       setLoading(true)
       const [catRes, tagRes] = await Promise.all([
-        fetch('http://localhost:3000/cms/v1/categories'),
-        fetch('http://localhost:3000/cms/v1/tags')
+        apiFetch(`/cms/v1/categories`),
+        apiFetch(`/cms/v1/tags`)
       ])
       const cats = await catRes.json()
       const tgs = await tagRes.json()
@@ -40,11 +41,11 @@ export default function Taxonomy() {
     e.preventDefault()
     try {
       const url = editId 
-        ? `http://localhost:3000/cms/v1/categories/${editId}` 
-        : 'http://localhost:3000/cms/v1/categories'
+        ? `/cms/v1/categories/${editId}` 
+        : `/cms/v1/categories`
       const method = editId ? 'PUT' : 'POST'
 
-      await fetch(url, {
+      await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, slug, description })
@@ -59,7 +60,7 @@ export default function Taxonomy() {
   const handleDeleteCategory = async (id) => {
     if (!window.confirm("Are you sure you want to delete this category?")) return;
     try {
-      await fetch(`http://localhost:3000/cms/v1/categories/${id}`, { method: 'DELETE' })
+      await apiFetch(`/cms/v1/categories/${id}`, { method: 'DELETE' })
       fetchTaxonomy()
     } catch (err) {
       alert("Error deleting category")
@@ -70,11 +71,11 @@ export default function Taxonomy() {
     e.preventDefault()
     try {
       const url = editId 
-        ? `http://localhost:3000/cms/v1/tags/${editId}` 
-        : 'http://localhost:3000/cms/v1/tags'
+        ? `/cms/v1/tags/${editId}` 
+        : `/cms/v1/tags`
       const method = editId ? 'PUT' : 'POST'
 
-      await fetch(url, {
+      await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, slug })
@@ -89,7 +90,7 @@ export default function Taxonomy() {
   const handleDeleteTag = async (id) => {
     if (!window.confirm("Are you sure you want to delete this tag?")) return;
     try {
-      await fetch(`http://localhost:3000/cms/v1/tags/${id}`, { method: 'DELETE' })
+      await apiFetch(`/cms/v1/tags/${id}`, { method: 'DELETE' })
       fetchTaxonomy()
     } catch (err) {
       alert("Error deleting tag")

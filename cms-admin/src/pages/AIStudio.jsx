@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api.js';
 import React, { useState } from 'react'
 import { Sparkles, Brain, Zap, Copy, RefreshCcw, Wand2, Type, MessageSquare, Save } from 'lucide-react'
 
@@ -85,7 +86,7 @@ export default function AIStudio() {
     setChangePercentage(0)
     
     try {
-      const response = await fetch('http://localhost:3000/cms/v1/ai/transform', {
+      const response = await apiFetch(`/cms/v1/ai/transform`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

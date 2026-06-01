@@ -7,7 +7,7 @@ import News from '../react-app/pages/News';
 let newsItems = [];
 try {
   // Fetch latest 20 RSS news items from the local backend
-  const response = await fetch('http://localhost:3000/cms/v1/rss/fetch?limit=20');
+  const response = await fetch(`${API_URL}/cms/v1/rss/fetch?limit=20`);
   if (response.ok) {
     const data = await response.json();
     newsItems = data.items || [];

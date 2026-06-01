@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api.js';
 import React, { useState, useEffect } from 'react'
 import { Save, Loader } from 'lucide-react'
 
@@ -20,7 +21,7 @@ export default function Settings() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch('http://localhost:3000/cms/v1/settings')
+      const res = await apiFetch(`/cms/v1/settings`)
       if (res.ok) {
         const data = await res.json()
         setSettings(prev => ({ ...prev, ...data }))
@@ -35,7 +36,7 @@ export default function Settings() {
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      await fetch('http://localhost:3000/cms/v1/settings', {
+      await apiFetch(`/cms/v1/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)

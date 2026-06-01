@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api.js';
 import React, { useState, useEffect } from 'react'
 import { UserPlus, Search, Settings as SettingsIcon, X, Mail, Shield, User as UserIcon, Trash2, CheckCircle2, XCircle, MoreVertical } from 'lucide-react'
 
@@ -13,13 +14,14 @@ export default function Users() {
     firstName: '',
     lastName: '',
     role: 'Editor',
-    designation: ''
+    designation: '',
+    password: ''
   })
 
   const fetchUsers = async () => {
     try {
       setLoading(true)
-      const res = await fetch('http://localhost:3000/cms/v1/users')
+      const res = await apiFetch(`/cms/v1/users`)
       const data = await res.json()
       setUsers(Array.isArray(data) ? data : [])
     } catch (e) {
@@ -37,7 +39,7 @@ export default function Users() {
   const handleInvite = async (e) => {
     e.preventDefault()
     try {
-      const res = await fetch('http://localhost:3000/cms/v1/users', {
+      const res = await apiFetch(`/cms/v1/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -47,7 +49,7 @@ export default function Users() {
         throw new Error(err.error || 'Failed to invite user')
       }
       setIsModalOpen(false)
-      setFormData({ email: '', firstName: '', lastName: '', role: 'Editor', designation: '' })
+      setFormData({ email: '', firstName: '', lastName: '', role: 'Editor', designation: '', password: '' })
       fetchUsers()
     } catch (err) {
       alert(err.message)
@@ -56,7 +58,7 @@ export default function Users() {
 
   const handleToggleStatus = async (user) => {
     try {
-      const res = await fetch(`http://localhost:3000/cms/v1/users/${user.id}`, {
+      const res = await apiFetch(`/cms/v1/users/${user.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isActive: !user.isActive })
@@ -70,7 +72,7 @@ export default function Users() {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to remove this team member? This action cannot be undone.')) return
     try {
-      const res = await fetch(`http://localhost:3000/cms/v1/users/${id}`, { method: 'DELETE' })
+      const res = await apiFetch(`/cms/v1/users/${id}`, { method: 'DELETE' })
       if (res.ok) fetchUsers()
       else alert('Failed to delete user')
     } catch (e) {
@@ -277,6 +279,23 @@ export default function Users() {
                     onChange={e => setFormData({...formData, email: e.target.value})}
                     className="w-full pl-14 pr-5 py-5 bg-gray-50 border-none rounded-3xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-[var(--cms-accent-light)] transition-all placeholder:text-gray-300"
                     placeholder="john.doe@unfilterstory.com"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Temporary Password (min 8 chars)</label>
+                <div className="relative">
+                  <Shield className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                  <input
+                    required
+                    type="password"
+                    minLength={8}
+                    autoComplete="new-password"
+                    value={formData.password}
+                    onChange={e => setFormData({...formData, password: e.target.value})}
+                    className="w-full pl-14 pr-5 py-5 bg-gray-50 border-none rounded-3xl text-sm font-bold focus:bg-white focus:ring-4 focus:ring-[var(--cms-accent-light)] transition-all placeholder:text-gray-300"
+                    placeholder="Set an initial password"
                   />
                 </div>
               </div>

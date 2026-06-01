@@ -1,3 +1,5 @@
+import { apiFetch } from '../lib/api.js';
+import { PUBLIC_SITE_URL } from '../lib/config.js';
 import React, { useState, useEffect } from 'react'
 import { Landmark, Folder, FileText, Share2, ExternalLink, RefreshCw, Layout as LayoutIcon, Globe, Map } from 'lucide-react'
 
@@ -17,9 +19,9 @@ export default function Architecture() {
     setLoading(true)
     try {
       const [catsRes, artsRes, navRes] = await Promise.all([
-        fetch('http://localhost:3000/cms/v1/categories'),
-        fetch('http://localhost:3000/cms/v1/articles'),
-        fetch('http://localhost:3000/cms/v1/navigation')
+        apiFetch(`/cms/v1/categories`),
+        apiFetch(`/cms/v1/articles`),
+        apiFetch(`/cms/v1/navigation`)
       ])
       
       const [categories, articles, navigation] = await Promise.all([
@@ -58,7 +60,7 @@ export default function Architecture() {
                 </span>
               </div>
               <a 
-                href={`http://localhost:4321${item.path}`} 
+                href={`${PUBLIC_SITE_URL}${item.path}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="p-2 text-gray-400 hover:text-gray-900 transition-colors"
@@ -168,7 +170,7 @@ export default function Architecture() {
         <div>
           <h4 className="font-extrabold text-emerald-900 tracking-tight">Frontend Live Pulse</h4>
           <p className="text-emerald-700/70 text-xs font-bold uppercase tracking-widest mt-0.5">
-            All dynamic routes are live-indexed from the public portal at http://localhost:4321
+            All dynamic routes are live-indexed from the public portal at {PUBLIC_SITE_URL}
           </p>
         </div>
       </div>

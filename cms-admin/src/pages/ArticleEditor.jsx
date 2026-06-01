@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api.js';
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { 
@@ -43,7 +44,7 @@ const compressImage = (file, maxWidth = 1920, quality = 0.7) => {
 // Helper to register media in the central library
 const registerMedia = async (url, filename, mimeType, sizeBytes) => {
   try {
-    await fetch('http://localhost:3000/cms/v1/media', {
+    await apiFetch(`/cms/v1/media`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ filename, url, mimeType, sizeBytes })
@@ -558,8 +559,8 @@ export default function ArticleEditor() {
     const fetchTaxonomy = async () => {
       try {
         const [catRes, tagRes] = await Promise.all([
-          fetch('http://localhost:3000/cms/v1/categories'),
-          fetch('http://localhost:3000/cms/v1/tags')
+          apiFetch(`/cms/v1/categories`),
+          apiFetch(`/cms/v1/tags`)
         ])
         setAvailableCategories(await catRes.json() || [])
         setAvailableTags(await tagRes.json() || [])
@@ -570,7 +571,7 @@ export default function ArticleEditor() {
     fetchTaxonomy()
 
     if (id && editor) {
-      fetch(`http://localhost:3000/cms/v1/articles/${id}`)
+      apiFetch(`/cms/v1/articles/${id}`)
         .then(res => res.json())
         .then(data => {
           if (data) {
@@ -634,12 +635,12 @@ export default function ArticleEditor() {
 
     try {
       const url = id 
-        ? `http://localhost:3000/cms/v1/articles/${id}` 
-        : 'http://localhost:3000/cms/v1/articles'
+        ? `/cms/v1/articles/${id}` 
+        : `/cms/v1/articles`
       
       const method = id ? 'PUT' : 'POST'
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(articleData)
@@ -674,7 +675,7 @@ export default function ArticleEditor() {
         setDialog({ show: false })
         setIsSaving(true)
         try {
-          const res = await fetch(`http://localhost:3000/cms/v1/articles/${id}`, {
+          const res = await apiFetch(`/cms/v1/articles/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ status: 'unpublished' })
@@ -696,7 +697,7 @@ export default function ArticleEditor() {
     if(!window.confirm("Publish this article immediately?")) return;
     setIsSaving(true)
     try {
-      const res = await fetch(`http://localhost:3000/cms/v1/articles/${id}`, {
+      const res = await apiFetch(`/cms/v1/articles/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -765,12 +766,12 @@ export default function ArticleEditor() {
 
     try {
       const url = id 
-        ? `http://localhost:3000/cms/v1/articles/${id}` 
-        : 'http://localhost:3000/cms/v1/articles'
+        ? `/cms/v1/articles/${id}` 
+        : `/cms/v1/articles`
       
       const method = id ? 'PUT' : 'POST'
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(articleData)

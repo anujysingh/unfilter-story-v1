@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Unfilter Story — System Analysis</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    color: #1a1a2e; font-size: 11px; line-height: 1.55; margin: 0;
+  }
+  h1 { font-size: 26px; margin: 0 0 4px; color: #11122b; }
+  h2 {
+    font-size: 17px; margin: 26px 0 10px; padding-bottom: 5px;
+    border-bottom: 2px solid #4361ee; color: #11122b;
+  }
+  h3 { font-size: 13px; margin: 16px 0 6px; color: #3a0ca3; }
+  p { margin: 6px 0; }
+  code {
+    font-family: "Consolas", "Courier New", monospace;
+    background: #f1f3f9; padding: 1px 5px; border-radius: 3px;
+    font-size: 10px; color: #b5179e;
+  }
+  pre {
+    background: #11122b; color: #e6e8f0; padding: 12px 14px;
+    border-radius: 6px; font-family: "Consolas", monospace;
+    font-size: 9.5px; line-height: 1.45; overflow-x: auto;
+    white-space: pre; page-break-inside: avoid;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  table {
+    width: 100%; border-collapse: collapse; margin: 10px 0;
+    font-size: 10px; page-break-inside: avoid;
+  }
+  th { background: #4361ee; color: #fff; text-align: left; padding: 7px 9px; font-weight: 600; }
+  td { border: 1px solid #d7dcec; padding: 6px 9px; vertical-align: top; }
+  tr:nth-child(even) td { background: #f7f8fc; }
+  ul { margin: 6px 0; padding-left: 20px; }
+  li { margin: 3px 0; }
+  .cover {
+    text-align: center; padding: 70px 0 40px; border-bottom: 3px solid #4361ee;
+    margin-bottom: 10px; page-break-after: always;
+  }
+  .cover .badge {
+    display: inline-block; background: #4361ee; color: #fff; font-size: 11px;
+    letter-spacing: 2px; padding: 5px 16px; border-radius: 20px; margin-bottom: 24px;
+  }
+  .cover h1 { font-size: 40px; }
+  .cover .sub { font-size: 15px; color: #555; margin-top: 8px; }
+  .cover .meta { margin-top: 60px; font-size: 11px; color: #777; }
+  .sev-crit { color: #c1121f; font-weight: 700; }
+  .sev-high { color: #e85d04; font-weight: 700; }
+  .sev-med  { color: #c79100; font-weight: 700; }
+  .sev-low  { color: #2a9d8f; font-weight: 700; }
+  .tldr {
+    background: #f1f3f9; border-left: 4px solid #4361ee;
+    padding: 12px 16px; border-radius: 4px; margin: 12px 0;
+  }
+  .pagebreak { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="badge">CONFIDENTIAL — TECHNICAL BRIEFING</div>
+  <h1>Unfilter Story</h1>
+  <div class="sub">System Analysis &amp; Architecture Review</div>
+  <div class="sub" style="font-size:13px;color:#888;">Startup-News Intelligence Platform</div>
+  <div class="meta">
+    Prepared for: Chief Technology Officer<br>
+    Repository: <code>unfilter-story-1</code><br>
+    Date: 29 May 2026
+  </div>
+</div>
+
+<h2>1. What This Product Is</h2>
+<p><strong>Unfilter Story</strong> is an <strong>Indian startup-news intelligence platform</strong>. It has two faces:</p>
+<ul>
+  <li><strong>A public news site</strong> — readers see curated articles plus a live "Startup News Feed."</li>
+  <li><strong>An internal CMS / intelligence console</strong> — the editorial team discovers, classifies, curates, AI-rewrites, and publishes startup news.</li>
+</ul>
+<p>The core differentiator is the <strong>Discovery Engine</strong>: it continuously ingests ~22 RSS sources (Inc42, YourStory, Entrackr, Economic Times, Google News queries, etc.), then runs a <strong>keyword-based classification engine</strong> that tags each story by <em>signal type</em> (Funding, Acquisition, Layoffs, Shutdown, …) and <em>industry vertical</em> (Fintech, AI/ML, HealthTech, …), while filtering out stock-market and corporate noise.</p>
+
+<h2>2. Architecture — Three Independent Apps</h2>
+<pre><code>┌─────────────────────┐         ┌──────────────────────┐
+│  public-site        │         │  cms-admin           │
+│  (Astro 6, SSR)     │         │  (React 19 + Vite 7) │
+│  Reader-facing      │         │  Editorial console   │
+└──────────┬──────────┘         └──────────┬───────────┘
+           │   fetch http://localhost:3000 │
+           └───────────────┬───────────────┘
+                           ▼
+              ┌─────────────────────────┐
+              │  api-backend            │
+              │  Fastify 5 + Prisma 6   │
+              │  • REST API             │
+              │  • RSS Discovery Engine │
+              │  • AI Studio proxy      │
+              │  • Cron-style scheduler │
+              └────────────┬────────────┘
+                           ▼
+              ┌─────────────────────────┐
+              │  SQLite (dev.db)        │  ← actual DB in use
+              │  (docker-compose ships  │
+              │   Postgres + Redis,     │
+              │   currently UNUSED)     │
+              └─────────────────────────┘</code></pre>
+
+<table>
+  <tr><th>Layer</th><th>Tech</th><th>Location</th></tr>
+  <tr><td>Backend / API</td><td>Fastify 5, Prisma 6, rss-parser, ESM Node</td><td><code>api-backend/</code></td></tr>
+  <tr><td>Database</td><td><strong>SQLite</strong> (<code>prisma/dev.db</code>)</td><td><code>api-backend/prisma/</code></td></tr>
+  <tr><td>Admin CMS</td><td>React 19, Vite 7, React Router 7, TipTap editor, Tailwind 4, dnd-kit</td><td><code>cms-admin/</code></td></tr>
+  <tr><td>Public site</td><td>Astro 6 (SSR via Node adapter), React islands, Tailwind 4</td><td><code>public-site/</code></td></tr>
+  <tr><td>AI</td><td>Google Gemini SDK + Bytez.js (multi-model proxy)</td><td>backend</td></tr>
+  <tr><td>Infra (defined, unused)</td><td>Postgres 16 + Redis 7 via Docker</td><td><code>docker-compose.yml</code></td></tr>
+</table>
+
+<h2>3. The Backend — Feature by Feature</h2>
+<p>The backend is a <strong>single 1,562-line <code>index.js</code></strong> (monolithic — flagged below). It exposes:</p>
+
+<h3>Public API (<code>/v1/*</code>)</h3>
+<ul>
+  <li><code>GET /v1/articles</code> — published articles (latest 20)</li>
+  <li><code>GET /v1/articles/:slug</code> — single article + auto-increments <code>viewCount</code></li>
+  <li><code>POST /v1/contact</code> — contact-form submissions</li>
+</ul>
+
+<h3>CMS API (<code>/cms/v1/*</code>) — full CRUD for:</h3>
+<ul>
+  <li>Articles (auto-slug, reading-time calc, tag find-or-create)</li>
+  <li>Categories, Tags, Media, Navigation (with drag-reorder), Users, Site Settings, Contact messages</li>
+</ul>
+
+<h3>AI Studio (<code>/cms/v1/ai/transform</code>)</h3>
+<p>Rewrites / transforms editorial text. Routes "gemini" → <code>google/gemma-2-27b-it</code> and "gpt" → <code>openai/gpt-4o-mini</code>, <strong>both via Bytez</strong> (a code comment notes this bypasses Gemini free-tier rate limits).</p>
+
+<h3>Discovery / RSS Engine (<code>/cms/v1/rss/*</code>) — the crown jewel</h3>
+<ul>
+  <li><code>GET /rss/fetch</code> — paginated, filterable feed (by source, category, date range, bookmarks). Auto-seeds 22 sources on first call.</li>
+  <li><code>POST /rss/trigger-sync</code> — manual sync (incremental or deep)</li>
+  <li><code>GET /rss/sync-status</code> — live progress (sources done, signals added, elapsed ms)</li>
+  <li><code>POST /rss/bookmark/:id</code> — toggle bookmark</li>
+</ul>
+
+<h3>The Discovery Sync — Two-Tier Architecture</h3>
+<ol>
+  <li><strong>Deep Sync</strong> (<code>runDeepSync</code>) — historical backfill. Paginates up to 100 pages per source, 6-month lookback. Runs once on first boot (empty DB).</li>
+  <li><strong>Incremental Sync</strong> (<code>runIncrementalSync</code>) — fast top-of-feed scan (page 1 only), stops early when it hits known items. Runs on boot + <strong>every 30 minutes</strong>.</li>
+  <li><strong>Data Retention</strong> (<code>runDataRetentionCleanup</code>) — daily; prunes signals older than ~6 months <strong>unless bookmarked</strong>.</li>
+</ol>
+
+<h3>The Classification Engine (the real IP)</h3>
+<p>For every item it:</p>
+<ol>
+  <li><strong>Noise filter</strong> — discards Sensex/Nifty/Ambani/Adani/crude-oil/geopolitics headlines.</li>
+  <li><strong>Industry tagging</strong> — 25 verticals (Fintech, AI/ML, SpaceTech…), keyword regex with word boundaries.</li>
+  <li><strong>Signal tagging</strong> — 22 prioritized signal types (Funding = priority 1 … Innovation = 21), with "strong" vs "supporting" keyword tiers and a confidence threshold. Headline matches outweigh body matches; capped to the single top signal + all matched industries.</li>
+</ol>
+<p><strong>⚠ Note:</strong> This logic is <strong>duplicated</strong> — once in <code>runDeepSync</code> and again (slightly trimmed) in <code>runIncrementalSync</code>. The same ~250-line keyword dictionary is maintained in two places. A prime refactor target.</p>
+
+<h2>4. Data Model (Prisma)</h2>
+<p>15 models: <code>CmsUser</code>, <code>Category</code> (self-nesting), <code>Tag</code>, <code>Article</code> (rich: SEO fields, access levels, breaking-news flag, scheduling), <code>ArticleTag</code>, <code>ArticleAuthor</code>, <code>ArticleVersion</code> (versioning), <code>Media</code>, <code>AuditLog</code>, <code>Redirect</code>, <code>Navigation</code> (hierarchical), <code>RssSource</code>, <strong><code>DiscoveryCache</code></strong> (the ingested signals), <code>SiteSetting</code> (key-value), <code>ContactMessage</code>.</p>
+<p>The schema is well-designed for a real CMS — versioning, audit logs, multi-author, and redirects are all modeled (though not all wired up yet).</p>
+
+<h2>5. The Admin CMS (React)</h2>
+<p>13 pages: Dashboard, Articles, ArticleEditor (TipTap rich editor with tables, images, YouTube), Media, Taxonomy, Navigation (drag-and-drop), <strong>Discovery</strong> (the intelligence console), <strong>AIStudio</strong>, Architecture, Users, Settings, ContactMessages.</p>
+
+<h2>6. The Public Site (Astro SSR)</h2>
+<p>Pages: home, <code>article/[slug]</code>, <code>startup-news</code> (live feed), about, contact, privacy, terms. Header/Footer pull branding from <code>/cms/v1/settings</code> at render time.</p>
+
+<h2>7. How to Set Up &amp; Run</h2>
+<p>The DB is <strong>SQLite</strong> in code, so Docker/Postgres is <strong>not</strong> strictly required to run it today.</p>
+
+<h3>Backend</h3>
+<pre><code>cd api-backend
+npm install
+npx prisma generate          # generate client
+npx prisma migrate dev       # or: npx prisma db push  (creates dev.db)
+# create .env  →  copy .env.example (see DB note below)
+node index.js                # port 3000; auto deep-sync if DB empty</code></pre>
+
+<h3>Admin CMS</h3>
+<pre><code>cd cms-admin
+npm install
+npm run dev                  # Vite dev server (usually :5173)</code></pre>
+
+<h3>Public site</h3>
+<pre><code>cd public-site
+npm install
+npm run dev                  # Astro dev server (usually :4321)</code></pre>
+
+<p>First backend boot with an empty DB triggers a <strong>full historical deep sync</strong> (slow, hits all 22 feeds) — let it run in the background; the feed populates progressively.</p>
+
+<h2>8. CTO-Level Risks &amp; Recommendations</h2>
+<table>
+  <tr><th>#</th><th>Issue</th><th>Severity</th><th>Recommendation</th></tr>
+  <tr>
+    <td>1</td>
+    <td><strong>DB mismatch</strong>: code uses SQLite, but <code>.env.example</code> + <code>docker-compose.yml</code> declare Postgres. Confusing &amp; not production-ready.</td>
+    <td class="sev-high">HIGH</td>
+    <td>Pick one. For production, migrate <code>schema.prisma</code> to <code>postgresql</code> and use the Docker Postgres. SQLite won't handle concurrent sync + web traffic.</td>
+  </tr>
+  <tr>
+    <td>2</td>
+    <td><strong>No authentication anywhere.</strong> All <code>/cms/v1/*</code> routes are open; <code>CORS origin: '*'</code>; users created with <code>passwordHash: 'placeholder'</code>. JWT is a dependency but unused.</td>
+    <td class="sev-crit">CRITICAL</td>
+    <td>Add auth middleware + JWT login before any deployment. Currently anyone can delete all articles.</td>
+  </tr>
+  <tr>
+    <td>3</td>
+    <td><strong>Hardcoded <code>http://localhost:3000</code></strong> in ~40 places across both frontends.</td>
+    <td class="sev-med">MEDIUM</td>
+    <td>Extract to an env var (<code>VITE_API_URL</code> / <code>PUBLIC_API_URL</code>). Blocks deployment as-is.</td>
+  </tr>
+  <tr>
+    <td>4</td>
+    <td><strong>1,562-line monolith</strong> <code>index.js</code> with the classification dictionary <strong>duplicated</strong>.</td>
+    <td class="sev-med">MEDIUM</td>
+    <td>Split into routes/services; extract the taxonomy into one shared module.</td>
+  </tr>
+  <tr>
+    <td>5</td>
+    <td><strong>In-memory sync state</strong> + <code>setInterval</code> schedulers. State lost on restart; won't scale horizontally. Redis is provisioned but unused.</td>
+    <td class="sev-med">LOW–MED</td>
+    <td>Move schedulers/state to a job queue (BullMQ + the existing Redis).</td>
+  </tr>
+  <tr>
+    <td>6</td>
+    <td><strong>Silent error swallowing</strong> — many <code>.catch(() =&gt; {})</code> in the sync engine.</td>
+    <td class="sev-low">LOW</td>
+    <td>Log failures with context.</td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>~20 loose <code>test_*.js</code> / utility scripts in <code>api-backend/</code> root (model probes, data dumps).</td>
+    <td class="sev-low">CLEANUP</td>
+    <td>Move to a <code>scripts/</code> folder or remove.</td>
+  </tr>
+</table>
+
+<h2>TL;DR</h2>
+<div class="tldr">
+<p>A <strong>3-tier startup-news intelligence platform</strong>: Astro public site + React admin CMS + Fastify/Prisma backend. The standout is a <strong>two-tier RSS discovery engine</strong> that ingests 22 Indian startup sources every 30 minutes and auto-classifies stories into 22 signal types × 25 industries via a keyword engine. The CMS is genuinely full-featured (rich editor, AI rewriting, versioning, media, taxonomy).</p>
+<p style="margin-bottom:0;"><strong>It is a strong prototype but not production-ready.</strong> The three blockers are: <strong>no auth</strong>, <strong>SQLite-vs-Postgres confusion</strong>, and <strong>hardcoded localhost URLs</strong>.</p>
+</div>
+
+</body>
+</html>

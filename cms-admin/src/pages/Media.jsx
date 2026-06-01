@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api.js';
 import React, { useState, useEffect } from 'react'
 import { Upload, ImageIcon, Filter, Search, Trash2, Calendar, FileText, ChevronRight } from 'lucide-react'
 
@@ -38,7 +39,7 @@ export default function Media() {
 
   const fetchMedia = async () => {
     try {
-      const res = await fetch('http://localhost:3000/cms/v1/media')
+      const res = await apiFetch(`/cms/v1/media`)
       const data = await res.json()
       setMedia(data)
     } catch (err) {
@@ -69,7 +70,7 @@ export default function Media() {
     setIsUploading(true)
     try {
       const compressedUrl = await compressImage(file)
-      const res = await fetch('http://localhost:3000/cms/v1/media', {
+      const res = await apiFetch(`/cms/v1/media`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -93,7 +94,7 @@ export default function Media() {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this media permanently?')) return
     try {
-      const res = await fetch(`http://localhost:3000/cms/v1/media/${id}`, { method: 'DELETE' })
+      const res = await apiFetch(`/cms/v1/media/${id}`, { method: 'DELETE' })
       if (res.ok) fetchMedia()
     } catch (err) {
       console.error(err)

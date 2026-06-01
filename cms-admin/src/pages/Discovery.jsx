@@ -1,3 +1,4 @@
+import { apiFetch } from '../lib/api.js';
 import React, { useState, useEffect, useRef } from 'react'
 import { Zap, RefreshCw, ExternalLink, Send, Plus, Trash2, Globe, AlertCircle, Loader2, ListFilter, Bookmark, BookmarkCheck, ChevronLeft, ChevronRight, LayoutGrid, List, Sparkles, Clock, ChevronDown, Radio, CheckCircle2 } from 'lucide-react'
 
@@ -65,7 +66,7 @@ export default function Discovery() {
         }
       }
       
-      const res = await fetch(`http://localhost:3000/cms/v1/rss/fetch?page=${pageNum}&limit=${limit}${isSync ? '&sync=true' : ''}${bookmarkedOnly ? '&bookmarkedOnly=true' : ''}${sourcesParam}${categoriesParam}${dateParam}`)
+      const res = await apiFetch(`/cms/v1/rss/fetch?page=${pageNum}&limit=${limit}${isSync ? '&sync=true' : ''}${bookmarkedOnly ? '&bookmarkedOnly=true' : ''}${sourcesParam}${categoriesParam}${dateParam}`)
       const data = await res.json()
       
       const items = (data.items || (Array.isArray(data) ? data : [])).map(item => {
@@ -101,7 +102,7 @@ export default function Discovery() {
 
   const fetchSources = async () => {
     try {
-      const res = await fetch('http://localhost:3000/cms/v1/rss/sources')
+      const res = await apiFetch(`/cms/v1/rss/sources`)
       const data = await res.json()
       setSources(data || [])
     } catch (err) {
@@ -174,7 +175,7 @@ export default function Discovery() {
   useEffect(() => {
     const poll = async () => {
       try {
-        const res = await fetch('http://localhost:3000/cms/v1/rss/sync-status')
+        const res = await apiFetch(`/cms/v1/rss/sync-status`)
         const data = await res.json()
         setSyncStatus(data)
 
@@ -202,7 +203,7 @@ export default function Discovery() {
   const handleAddSource = async (e) => {
     e.preventDefault()
     try {
-      await fetch('http://localhost:3000/cms/v1/rss/sources', {
+      await apiFetch(`/cms/v1/rss/sources`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSource)
@@ -218,7 +219,7 @@ export default function Discovery() {
   const handleDeleteSource = async (id) => {
     if (!window.confirm('Remove this source?')) return
     try {
-      await fetch(`http://localhost:3000/cms/v1/rss/sources/${id}`, { method: 'DELETE' })
+      await apiFetch(`/cms/v1/rss/sources/${id}`, { method: 'DELETE' })
       fetchSources()
       fetchNews(true, 1, true)
     } catch (err) {
@@ -228,7 +229,7 @@ export default function Discovery() {
 
   const toggleBookmark = async (id) => {
     try {
-      const res = await fetch(`http://localhost:3000/cms/v1/rss/bookmark/${id}`, { method: 'POST' })
+      const res = await apiFetch(`/cms/v1/rss/bookmark/${id}`, { method: 'POST' })
       if (res.ok) {
         const updated = await res.json()
         setNews(prev => prev.map(item => item.id === id ? { ...item, isBookmarked: updated.isBookmarked } : item))
@@ -245,7 +246,7 @@ export default function Discovery() {
   const triggerManualSync = async (type = 'incremental') => {
     if (syncStatus?.isSyncing) return
     try {
-      await fetch('http://localhost:3000/cms/v1/rss/trigger-sync', {
+      await apiFetch(`/cms/v1/rss/trigger-sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type })

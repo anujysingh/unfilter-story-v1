@@ -11,8 +11,13 @@ let relatedStories = [];
 let errorMsg = null;
 
 try {
+<<<<<<< HEAD
   // Fetch the article details
   const response = await fetch(`http://localhost:3000/v1/articles/${slug}`);
+=======
+  // Try fetching the article using the backend's new single-slug public routing API
+  const response = await fetch(`${API_URL}/v1/articles/${slug}`);
+>>>>>>> mine/main
   if (response.ok) {
     article = await response.json();
   } else {

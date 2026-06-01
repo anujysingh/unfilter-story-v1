@@ -3,3 +3,10 @@ node_modules
 .env
 
 /generated/prisma
+.prisma
+
+# Migration artifacts (one-off, machine-local)
+scripts/data-dump/
+*.db.backup-*
+server.log
+npm_install_log.txt
